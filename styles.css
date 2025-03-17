@@ -47,6 +47,21 @@ body {
     max-width: 80%;
     height: auto;
     filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.3));
+    opacity: 0; /* 初始不可见 */
+    animation: fadeIn 1.2s ease-in-out forwards; /* 添加淡入动画 */
+    animation-delay: 0.5s; /* 延迟0.5秒开始动画 */
+}
+
+/* 添加淡入动画关键帧 */
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 /* 移动端适配 */

@@ -19,13 +19,24 @@ document.addEventListener('DOMContentLoaded', function() {
     ];
 
     const backgroundElement = document.querySelector('.background-image');
+    const logoElement = document.querySelector('.logo');
     
     // 随机选择背景图片
     function setRandomBackground() {
         const randomIndex = Math.floor(Math.random() * backgroundImages.length);
         const selectedImage = backgroundImages[randomIndex];
         
-        backgroundElement.style.backgroundImage = `url('${selectedImage}')`;
+        // 预加载图片
+        const img = new Image();
+        img.src = selectedImage;
+        
+        img.onload = function() {
+            // 图片加载完成后设置背景，然后触发 Logo 动画
+            backgroundElement.style.backgroundImage = `url('${selectedImage}')`;
+            
+            // Logo 动画已在 CSS 中设置，这里不需要额外的 JS 代码
+            // 如果需要更精确控制，可以在这里添加 logoElement.style.animation = '...'
+        };
     }
     
     // 页面加载时设置随机背景
