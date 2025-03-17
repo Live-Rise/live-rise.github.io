@@ -41,15 +41,22 @@ body {
 
 .logo-container {
     text-align: center;
+    width: 100%;
+    max-width: 80vw; /* 略微减小最大宽度 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .logo {
-    max-width: 80%;
+    max-width: 100%; /* 从60%增加到90%，放大1.5倍 */
+    width: auto;
     height: auto;
     filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.3));
-    opacity: 0; /* 初始不可见 */
-    animation: fadeIn 1.2s ease-in-out forwards; /* 添加淡入动画 */
-    animation-delay: 0.5s; /* 延迟0.5秒开始动画 */
+    opacity: 0;
+    animation: fadeIn 1.2s ease-in-out forwards;
+    animation-delay: 0.5s;
+    transform-origin: center center;
 }
 
 /* 添加淡入动画关键帧 */
@@ -64,9 +71,40 @@ body {
     }
 }
 
+/* 平板和中等屏幕设备 */
+@media (max-width: 1024px) {
+    .logo {
+        max-width: 80%; /* 中等屏幕略大一些 */
+    }
+}
+
 /* 移动端适配 */
 @media (max-width: 768px) {
     .logo {
-        max-width: 90%;
+        max-width: 200%; /* 移动端使用更大尺寸 */
+        width: auto;
+    }
+    
+    .logo-container {
+        width: 100%;
+        max-width: 100vw;
+    }
+    
+    @keyframes fadeIn {
+        0% {
+            opacity: 0;
+            transform: translateY(30px) scale(0.9);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+}
+
+/* 更小屏幕尺寸 */
+@media (max-width: 480px) {
+    .logo {
+        max-width: 220%; /* 在小屏幕上进一步放大 */
     }
 } 
