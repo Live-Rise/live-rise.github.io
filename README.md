@@ -1,1 +1,1 @@
-live-rise.com
+https://live-rise.com/
