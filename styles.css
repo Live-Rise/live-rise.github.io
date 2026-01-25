@@ -111,7 +111,7 @@ body.nav-locked {
 .brand-mark {
     width: 150px;
     height: 32px;
-    background: url('images/logo.png') center/contain no-repeat;
+    background: url('https://live-rise.com/images/Logo.png') center/contain no-repeat;
     display: none;
     text-indent: -9999px;
 }
@@ -1022,4 +1022,5 @@ main {
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
     }
+
 }
