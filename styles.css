@@ -141,7 +141,7 @@ body.nav-locked {
 .brand-mark {
     width: 150px;
     height: 32px;
-    background: url('images/logo.png') center/contain no-repeat;
+    background: url('images/Logo.png') center/contain no-repeat;
     display: none;
     text-indent: -9999px;
 }

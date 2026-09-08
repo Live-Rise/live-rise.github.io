@@ -688,7 +688,7 @@ function renderApp() {
                     <div class="hero-overlay">
                         <h1 class="hero-title sr-only">${text.hero.title}</h1>
                         <div class="hero-logo">
-                            <img src="images/logo.png" alt="${text.hero.title}" />
+                            <img src="images/Logo.png" alt="${text.hero.title}" />
                         </div>
                         <p class="hero-tagline">${text.hero.tagline}</p>
                         <div class="hero-chips">
