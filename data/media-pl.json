@@ -1,0 +1,49 @@
+{
+  "videos": [
+    {
+      "name": "Live Rise!!: 4K Fever Auto Living Mode Gameplay Demonstration6",
+      "thumb": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/257375362/74e1d698294de41e40333fbd2add4fd6858f13aa/movie_600x337.jpg?t=1783848141",
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/4142580/1991174168/570350f2c339420841118221653138050419e9c3/1783847800/hls_264_master.m3u8?t=1783848141"
+    },
+    {
+      "name": "Live Rise!!: 4K Fever Auto Living Mode Gameplay Demonstration5",
+      "thumb": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/257375356/d8f30b699bf69094ee2ff3238fe43c1612e5c940/movie_600x337.jpg?t=1783847485",
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/4142580/543125318/14c8f2bf947d2585b7072b89f718d87ef99ba7ed/1783846918/hls_264_master.m3u8?t=1783847485"
+    },
+    {
+      "name": "Ring a bell_PV",
+      "thumb": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/257339569/6d88e5905ef4552f5506b6ba0d44b2972498cb87/movie_600x337.jpg?t=1779215555",
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/4142580/1699002038/d2acd2c3efcf6b0abc3916689e6d99932634506a/1779212724/hls_264_master.m3u8?t=1779215555"
+    },
+    {
+      "name": "真夏のコンフォート_PV",
+      "thumb": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/257341885/be631e35799815acc0474574204a630c20a02707/movie_600x337.jpg?t=1779532242",
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/4142580/490141337/29f6c54e78e9f4c0b8fccd65ac669a30eee8c8ac/1779530942/hls_264_master.m3u8?t=1779532242"
+    },
+    {
+      "name": "Drive Me Crazy_PV",
+      "thumb": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/257299287/d91fcf0dcb1460e8d1c0e18feb390f23f8b6826b/movie_600x337.jpg?t=1779215556",
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/4142580/742211079/d9bf4f5fd5b5af12c138f1d56beee0a1ba0cb930/1772866247/hls_264_master.m3u8?t=1779215556"
+    },
+    {
+      "name": "Live Rise!!: 4K Fever Auto Living Mode Gameplay Demonstration4",
+      "thumb": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/257300684/22735a78554324dc78dc4264aa895b0c90f6009e/movie_600x337.jpg?t=1779215558",
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/4142580/1169501107/2a2bb6ce4fa891ade25315c4ff89e98caa1f7b9b/1773079605/hls_264_master.m3u8?t=1779215558"
+    },
+    {
+      "name": "Live Rise!!: 4K Fever Auto Living Mode Gameplay Demonstration",
+      "thumb": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/257278407/b0e580b24cfbc1b869b5e016d8cb38e83ffdc8b8/movie_600x337.jpg?t=1772866008",
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/4142580/711312412/c4d7a9189ea38ff62dbce2d71055a5a56ec31f7b/1770118091/hls_264_master.m3u8?t=1772866008"
+    }
+  ],
+  "screenshots": [
+    "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4142580/24b8d6ccdf0cf3824f1e349237472d81dc2ed0c1/ss_24b8d6ccdf0cf3824f1e349237472d81dc2ed0c1.1920x1080.jpg?t=1783849259",
+    "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4142580/d8f30b699bf69094ee2ff3238fe43c1612e5c940/ss_d8f30b699bf69094ee2ff3238fe43c1612e5c940.1920x1080.jpg?t=1783849259",
+    "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4142580/b1520bcdcd09f368b6c667baebcb84dedf93ea6a/ss_b1520bcdcd09f368b6c667baebcb84dedf93ea6a.1920x1080.jpg?t=1783849259",
+    "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4142580/a7789c56842ac71eb895f0d8712e955047c0b361/ss_a7789c56842ac71eb895f0d8712e955047c0b361.1920x1080.jpg?t=1783849259",
+    "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4142580/28cbe835ebdf2f346c69afbb840bb5e1ef4d1e65/ss_28cbe835ebdf2f346c69afbb840bb5e1ef4d1e65.1920x1080.jpg?t=1783849259",
+    "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4142580/542f7705937416f8fac58c5058424147719fcabe/ss_542f7705937416f8fac58c5058424147719fcabe.1920x1080.jpg?t=1783849259",
+    "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4142580/7f1861de3ae03e90a63524d3db7da9819c87854f/ss_7f1861de3ae03e90a63524d3db7da9819c87854f.1920x1080.jpg?t=1783849259",
+    "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4142580/afffc8ed6d9accd3240cfa201262c306643e2034/ss_afffc8ed6d9accd3240cfa201262c306643e2034.1920x1080.jpg?t=1783849259"
+  ]
+}

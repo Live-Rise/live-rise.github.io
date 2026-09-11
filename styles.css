@@ -9,7 +9,15 @@
     --border: rgba(255, 255, 255, 0.14);
     --max-width: 1160px;
     --transition: 0.28s ease;
+    /* 入场浮动统一缓动:对称先缓后急再缓( easeInOutQuad 的贝塞尔近似) */
+    --enter-ease: cubic-bezier(0.455, 0.03, 0.515, 0.955);
     --glass-blur: 26px;
+    /* 导航栏与所有翻页按钮共用的磨砂强度 */
+    --frost-blur: 20px;
+    /* chip 面板与翻页按钮共用的磨砂强度(按钮以 chip 为基准) */
+    --panel-frost-blur: calc(var(--glass-blur) * 0.45);
+    /* 翻页按钮专属:常驻背景多为低细节软画面,需要更强磨砂才可感知 */
+    --paging-blur: 40px;
     --glass-border: rgba(255, 255, 255, 0.18);
     --glass-tint-dark: rgba(20, 16, 28, 0.62);
     --glass-tint-light: rgba(255, 255, 255, 0.12);
@@ -34,9 +42,6 @@
     --icon-chip-bg: rgba(255, 255, 255, 0.08);
     --icon-chip-color: var(--text);
     --card-index-color: rgba(255, 159, 209, 0.45);
-    --media-ctrl-bg: rgba(255, 255, 255, 0.04);
-    --media-ctrl-border: rgba(255, 255, 255, 0.2);
-    --media-ctrl-color: rgba(255, 255, 255, 0.8);
     --media-dot: rgba(255, 255, 255, 0.28);
     --media-dot-active: rgba(255, 255, 255, 0.92);
     --footer-bg: var(--bg-page);
@@ -91,17 +96,32 @@ body.nav-locked {
     overflow-x: clip;
 }
 
-/* Scroll reveal */
+/* In-flight motion blur: while a nav-triggered jump scrolls the page, JS
+   drives --scroll-blur on main/footer from the measured scroll velocity, so
+   the transit reads as a fast camera move. The fixed nav sits outside these
+   subtrees and stays crisp. */
+main.is-motion-blur,
+.footer.is-motion-blur {
+    filter: blur(var(--scroll-blur, 0px));
+    will-change: filter;
+}
+
+/* Scroll reveal — fade + float-up on scroll. Two animations with split
+   durations off the same start: the rise lands at 0.7s while the fade keeps
+   settling until 0.9s. Uses animation (not transition) so it composes with
+   per-component `transition` declarations like `.feature-card`'s hover
+   transition instead of being overridden by them. */
 .reveal {
     opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.75s ease var(--reveal-delay, 0s), transform 0.75s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s);
-    will-change: opacity, transform;
+    translate: 0 30px;
 }
 
 .reveal.in-view {
     opacity: 1;
-    transform: none;
+    translate: none;
+    animation:
+        heroEnterFade 0.9s var(--enter-ease) var(--reveal-delay, 0s) backwards,
+        heroEnterRise 0.7s var(--enter-ease) var(--reveal-delay, 0s) backwards;
 }
 
 /* Navigation */
@@ -119,8 +139,8 @@ body.nav-locked {
     border-bottom: 1px solid var(--nav-border);
     color: var(--nav-text);
     box-shadow: 0 18px 30px -24px rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(var(--frost-blur));
+    -webkit-backdrop-filter: blur(var(--frost-blur));
     transition: transform var(--transition), width var(--transition), height var(--transition), padding var(--transition), border-radius var(--transition), left var(--transition), right var(--transition), top var(--transition), background var(--transition), border-color var(--transition);
     z-index: 100;
 }
@@ -215,7 +235,8 @@ body.nav-locked {
 }
 
 /* White CTA pill */
-/* Glass CTA pill — only shown in the floating nav state */
+/* Glass CTA pill — hidden by default only inside the top nav; it is shown
+   in the floating nav state. Usages outside the nav (media foot) stay visible. */
 .btn-cta-pill {
     display: inline-flex;
     align-items: center;
@@ -233,14 +254,19 @@ body.nav-locked {
     backdrop-filter: blur(calc(var(--glass-blur) * 0.5));
     -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 0.5));
     white-space: nowrap;
+    transition: transform var(--transition), box-shadow var(--transition), opacity var(--transition), visibility var(--transition), filter var(--transition);
+}
+
+.top-nav .btn-cta-pill {
     opacity: 0;
     visibility: hidden;
-    transition: transform var(--transition), box-shadow var(--transition), opacity var(--transition), visibility var(--transition);
+    filter: blur(6px);
 }
 
 .top-nav--floating .btn-cta-pill {
     opacity: 1;
     visibility: visible;
+    filter: blur(0);
 }
 
 /* In the default (non-floating) nav, the CTA pill is hidden — collapse it
@@ -263,6 +289,7 @@ body.nav-locked {
 }
 
 .nav-links {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 20px;
@@ -279,29 +306,33 @@ body.nav-locked {
     transition: color var(--transition);
 }
 
-.nav-link::after {
-    content: '';
+/* Shared underline that slides between nav targets (positioned by script.js
+   from the active/hovered link's box). The strong ease-out curve makes the
+   travel between targets feel non-linear and smooth. */
+.nav-indicator {
     position: absolute;
     left: 0;
     bottom: 0;
-    width: 100%;
+    width: 0;
     height: 2px;
     border-radius: 999px;
     background: var(--accent);
-    transform: scaleX(0);
-    transform-origin: right;
-    transition: transform var(--transition);
+    opacity: 0;
+    transition:
+        transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+        width 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.25s ease;
+    pointer-events: none;
+}
+
+.nav-indicator.visible {
+    opacity: 1;
 }
 
 .nav-link:hover,
-.nav-link:focus {
+.nav-link:focus,
+.nav-link.active {
     color: var(--text);
-}
-
-.nav-link:hover::after,
-.nav-link:focus::after {
-    transform: scaleX(1);
-    transform-origin: left;
 }
 
 .nav-actions {
@@ -329,33 +360,127 @@ body.nav-locked {
     position: relative;
 }
 
+/* apple.com-style page curtain: while the language menu is open the whole
+   page frosts over EXCEPT the nav (z-index 100) and the menu (z-index 200),
+   which both sit above this layer. */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: rgba(10, 8, 14, 0.35);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.24s cubic-bezier(0.4, 0, 0.6, 1), visibility 0.24s linear;
+}
+
+body.lang-menu-open::before {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.32s cubic-bezier(0.4, 0, 0.6, 1) 0.06s, visibility 0s;
+}
+
 .lang-menu {
-    position: absolute;
-    top: calc(100% + 12px);
-    right: 0;
+    /* JS portals the menu to <body> and sets top/right from the toggle button
+       (fixed positioning). It must not stay inside .top-nav: the nav's own
+       backdrop-filter forms a backdrop root, so a descendant's backdrop blur
+       would only sample the nav's interior and never the page behind. */
+    position: fixed;
+    top: 76px;
+    right: 48px;
     width: auto;
     min-width: 180px;
+    max-height: min(64vh, 560px);
+    overflow: hidden;
     background: rgba(16, 12, 24, 0.72);
     border: 1px solid var(--glass-border);
     border-radius: 24px;
     padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-12px) scale(0.95);
-    transition: all var(--transition);
+    transform: translateY(-10px) scale(0.98);
+    transform-origin: top center;
+    /* Apple-style ease: cubic-bezier(.4,0,.6,1) on open (.32s) and a shorter
+       .24s on close. The page-blur ramp is handled by the body curtain above.
+       top/right stay out of the transition so JS repositioning never animates. */
+    transition: opacity 0.24s cubic-bezier(0.4, 0, 0.6, 1),
+        transform 0.24s cubic-bezier(0.4, 0, 0.6, 1),
+        visibility 0.24s linear;
     box-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
+    backdrop-filter: blur(var(--glass-blur)) saturate(1);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1);
     z-index: 200;
+}
+
+/* Inner scroller keeps the scrollbar inside the glass: the panel's padding
+   insets it from the edge, so it never overlaps the rounded corners. */
+.lang-menu-scroll {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+}
+
+.lang-menu-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.lang-menu-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 999px;
+}
+
+/* Edge fade for the scrollable list: items dissolve towards the panel's
+   top/bottom edges instead of hard-clipping. Each side is only active while
+   that side actually has hidden content (classes set from script.js). */
+.lang-menu-scroll.fade-top {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 28px, #000 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 28px, #000 100%);
+}
+
+.lang-menu-scroll.fade-bottom {
+    -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 28px), transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 28px), transparent 100%);
+}
+
+.lang-menu-scroll.fade-top.fade-bottom {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
 }
 
 .lang-menu.open {
     opacity: 1;
     visibility: visible;
     transform: translateY(0) scale(1);
+    transition: opacity 0.32s cubic-bezier(0.4, 0, 0.6, 1),
+        transform 0.32s cubic-bezier(0.4, 0, 0.6, 1),
+        visibility 0s;
+}
+
+/* Options cascade in like apple.com's nav flyout: each item drops 4px with a
+   20ms stagger starting at 80ms; on close they retract faster with no delay.
+   Uses the independent `translate` property so :hover's transform lift keeps
+   working. */
+.lang-menu.open .lang-option {
+    opacity: 1;
+    translate: 0 0;
+    transition: opacity 0.32s cubic-bezier(0.4, 0, 0.6, 1),
+        translate 0.32s cubic-bezier(0.4, 0, 0.6, 1),
+        background 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+    transition-delay: min(calc(var(--flyout-index, 0) * 20ms + 80ms), 0.4s),
+        min(calc(var(--flyout-index, 0) * 20ms + 80ms), 0.4s),
+        0s, 0s, 0s, 0s;
 }
 
 .lang-option {
@@ -374,7 +499,12 @@ body.nav-locked {
     border-radius: 999px;
     backdrop-filter: blur(calc(var(--glass-blur) * 0.45));
     -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 0.45));
-    transition: all 0.25s ease;
+    /* Cascade start state (menu closed); .lang-menu.open .lang-option reveals */
+    opacity: 0;
+    translate: 0 -4px;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.6, 1),
+        translate 0.2s cubic-bezier(0.4, 0, 0.6, 1),
+        background 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .lang-option:hover,
@@ -546,11 +676,17 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 160px 48px 150px;
+    padding: 120px 48px 100px;
     --hero-parallax-x: 0px;
     --hero-parallax-y: 0px;
     --hero-bg-shift-x: 0px;
     --hero-bg-shift-y: 0px;
+    /* 首屏文字自动变色（iOS 式自适应）：默认跟随明暗模式，
+       由 heroAdaptiveInk 按画面亮度采样后覆写 */
+    --hero-ink: var(--text);
+    --hero-ink-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
+    --hero-chip-bg: var(--chip-bg);
+    --hero-chip-border: var(--card-border);
     overflow: hidden;
 }
 
@@ -598,6 +734,60 @@ main {
     }
 }
 
+/* Entrance motion — fade and float-up as separate keyframes on one clock:
+   0.9s fade, 0.7s rise, shared easing. Animates the `translate` property so
+   it composes with the parallax `transform` on these same elements instead
+   of overriding it. */
+@keyframes heroEnterFade {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes heroEnterRise {
+    from {
+        translate: 0 var(--enter-y, 30px);
+    }
+
+    to {
+        translate: 0 0;
+    }
+}
+
+/* Defocus→refocus pulse while the nav morphs between bar and floating pill.
+   Two identical keyframes under different names so toggling the floating
+   state restarts the animation in both directions without replaying the
+   entrance fade/rise pair. */
+@keyframes navRefocusIn {
+
+    from {
+        opacity: 0.35;
+        filter: blur(7px);
+    }
+
+    to {
+        opacity: 1;
+        filter: blur(0);
+    }
+}
+
+@keyframes navRefocusOut {
+
+    from {
+        opacity: 0.35;
+        filter: blur(7px);
+    }
+
+    to {
+        opacity: 1;
+        filter: blur(0);
+    }
+}
+
 .hero::after {
     content: '';
     position: absolute;
@@ -611,7 +801,8 @@ main {
 
 .hero-overlay {
     position: relative;
-    max-width: 680px;
+    /* 不设宽度上限：自动网格轨道会被 width:max-content 的子项（hero-id/hero-chips）
+       撑大导致整体偏移；文案可读性由 .hero-tagline 自身的 max-width 保证 */
     width: 100%;
     margin: 0 auto;
     text-align: center;
@@ -631,6 +822,9 @@ main {
 .hero-logo {
     width: min(320px, 50vw);
     margin: 0 auto;
+    animation:
+        heroEnterFade 0.9s var(--enter-ease) backwards,
+        heroEnterRise 0.7s var(--enter-ease) backwards;
     transform: translate3d(calc(var(--hero-parallax-x, 0px) * 1.25), calc(var(--hero-parallax-y, 0px) * 1.25), 0);
     transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
     will-change: transform;
@@ -646,7 +840,14 @@ main {
 .hero-pagination {
     position: absolute;
     left: 50%;
-    bottom: 44px;
+    /* Hero content (nav clearance + overlay + bottom padding) can outgrow
+       100vh on short viewports (e.g. 150% display scaling); when it does,
+       anchor cues to the first-screen fold instead of the hero bottom so
+       they stay visible. The hero is the first element, so the fold is
+       100svh from its top. Plain offset first: svh-less browsers drop the
+       whole clamp declaration. */
+    bottom: 26px;
+    bottom: max(26px, calc(100% - 100svh + 26px));
     transform: translateX(-50%);
     display: flex;
     align-items: center;
@@ -674,30 +875,40 @@ main {
     transform: scale(1.2);
 }
 
-/* Hero prev/next arrows */
+/* Hero prev/next arrows — ink-adaptive glass shared with every paging
+   control (media carousel arrows, back-to-top): chip palette + panel-level
+   frost, recolored by the hero ink on every luminance flip (nav vars only
+   cover the pre-sample moments). appearance:none strips the UA button
+   theme layer that suppresses backdrop sampling, and translateZ(0) keeps
+   each disc on its own compositing layer. */
 .hero-arrow {
     position: absolute;
     top: 50%;
-    transform: translateY(-50%);
-    width: 52px;
-    height: 52px;
+    transform: translateY(-50%) translateZ(0);
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    background: rgba(14, 10, 20, 0.38);
-    backdrop-filter: blur(calc(var(--glass-blur) * 0.55));
-    -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 0.55));
-    color: rgba(255, 255, 255, 0.88);
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid var(--hero-chip-border, var(--nav-floating-border));
+    background: var(--hero-chip-bg, var(--nav-bg));
+    backdrop-filter: blur(var(--paging-blur));
+    -webkit-backdrop-filter: blur(var(--paging-blur));
+    color: var(--hero-ink, var(--nav-text));
     display: grid;
     place-items: center;
     cursor: pointer;
     opacity: 0.78;
     z-index: 2;
-    transition: opacity var(--transition), transform var(--transition), border-color var(--transition), background var(--transition);
+    animation:
+        heroEnterFade 0.9s var(--enter-ease) 0.45s backwards,
+        heroEnterRise 0.7s var(--enter-ease) 0.45s backwards;
+    transition: opacity var(--transition), transform var(--transition), border-color var(--transition), background var(--transition), color 0.45s ease;
 }
 
 .hero-arrow svg {
-    width: 22px;
-    height: 22px;
+    width: 17px;
+    height: 17px;
 }
 
 .hero-arrow--prev {
@@ -711,18 +922,72 @@ main {
 .hero-arrow:hover,
 .hero-arrow:focus-visible {
     opacity: 1;
-    transform: translateY(-50%) scale(1.06);
-    border-color: rgba(255, 255, 255, 0.45);
-    background: rgba(28, 20, 38, 0.45);
+    transform: translateY(-50%) scale(1.06) translateZ(0);
+    border-color: var(--hero-btn-border-hover, var(--nav-border-strong));
+    background: var(--hero-chip-bg, var(--nav-bg));
 }
 
 .hero-arrow:active {
-    transform: translateY(-50%) scale(0.98);
+    transform: translateY(-50%) scale(0.98) translateZ(0);
 }
 
 .hero-arrow:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
+}
+
+/* Hero scroll-down cue — bare double-chevron hanging right below the
+   primary download button (its positioned parent). */
+.hero-scroll {
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 14px);
+    /* translateZ(0) layers the button: Chromium sometimes drops an
+       unlayered element's own painting when the fog gradient pseudo-element
+       sits behind it, leaving the chevron invisible. The side arrows are
+       immune only because their opacity 0.78 layers them already. */
+    transform: translateX(-50%) translateZ(0);
+    padding: 6px;
+    border: none;
+    background: none;
+    color: rgba(255, 255, 255, 0.88);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    z-index: 2;
+    animation:
+        heroEnterFade 0.9s var(--enter-ease) 0.6s backwards,
+        heroEnterRise 0.7s var(--enter-ease) 0.6s backwards,
+        heroScrollNudge 2.6s ease-in-out 1.6s infinite;
+    transition: opacity var(--transition), transform var(--transition), color var(--transition);
+}
+
+.hero-scroll svg {
+    width: 22px;
+    height: 22px;
+}
+
+.hero-scroll:hover,
+.hero-scroll:focus-visible {
+    transform: translateX(-50%) translateZ(0) scale(1.08);
+    color: #ffffff;
+}
+
+.hero-scroll:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+/* Gentle downward nudge — animates the `translate` property so it composes
+   with the centered `transform` and never fights the hover scale */
+@keyframes heroScrollNudge {
+    0%, 100% {
+        translate: 0 0;
+    }
+
+    50% {
+        translate: 0 6px;
+    }
 }
 
 .feature-grid {
@@ -773,27 +1038,63 @@ main {
 }
 
 .hero-buttons {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 16px;
     flex-wrap: wrap;
     margin: 30px auto 0;
+    animation:
+        heroEnterFade 0.9s var(--enter-ease) 0.45s backwards,
+        heroEnterRise 0.7s var(--enter-ease) 0.45s backwards;
     transform: translate3d(calc(var(--hero-parallax-x, 0px) * 1.1), calc(var(--hero-parallax-y, 0px) * 1.1), 0);
     transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
     will-change: transform;
 }
 
+/* 画面明暗自适应（heroAdaptiveInk 采样驱动）。类挂在 body 上，变量全局
+   继承：首屏文字/箭头与首屏以下的翻页按钮（媒体箭头、回顶）一起变色。
+   亮画面 → 深色文字 + 白色柔光；暗画面 → 浅色文字 + 黑色投影 */
+body.hero-on-light {
+    --hero-ink: #1a1a2e;
+    --hero-ink-shadow: 0 2px 22px rgba(255, 255, 255, 0.5);
+    --hero-chip-bg: rgba(255, 255, 255, 0.45);
+    --hero-chip-border: rgba(26, 26, 46, 0.12);
+    --hero-btn-border-hover: rgba(26, 26, 46, 0.4);
+}
+
+body.hero-on-dark {
+    --hero-ink: #ffffff;
+    --hero-ink-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
+    --hero-chip-bg: rgba(255, 255, 255, 0.14);
+    --hero-chip-border: rgba(255, 255, 255, 0.18);
+    --hero-btn-border-hover: rgba(255, 255, 255, 0.45);
+}
+
 .hero-tagline {
-    font-size: clamp(1.05rem, 2.3vw, 1.4rem);
-    color: var(--text);
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--hero-ink);
     text-align: center;
     max-width: 640px;
     margin: 16px auto 0;
-    text-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
+    text-shadow: var(--hero-ink-shadow);
+    animation:
+        heroEnterFade 0.9s var(--enter-ease) 0.15s backwards,
+        heroEnterRise 0.7s var(--enter-ease) 0.15s backwards;
     transform: translate3d(calc(var(--hero-parallax-x, 0px) * 0.9), calc(var(--hero-parallax-y, 0px) * 0.9), 0);
-    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    transition:
+        transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+        color 0.45s ease,
+        text-shadow 0.45s ease;
     will-change: transform;
+}
+
+/* 手机/平板保持原有堆叠居中：display:contents 使 logo 与标语
+   仍是 .hero-overlay 的直接网格项，不产生额外盒子 */
+.hero-id {
+    display: contents;
 }
 
 .chip {
@@ -817,6 +1118,14 @@ main {
     flex-wrap: wrap;
     justify-content: center;
     gap: 12px;
+    /* 宽度跟随内容而非 680px 覆盖层：整行放得下就保持单行不折叠，
+       仅当超出视口可用宽度（含 .hero 左右内边距）时才换行（窄屏兜底） */
+    width: max-content;
+    max-width: calc(100vw - 40px);
+    justify-self: center;
+    animation:
+        heroEnterFade 0.9s var(--enter-ease) 0.3s backwards,
+        heroEnterRise 0.7s var(--enter-ease) 0.3s backwards;
     transform: translate(calc(var(--hero-parallax-x, 0px) * 1.35), calc(var(--hero-parallax-y, 0px) * 1.35));
     transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -824,10 +1133,36 @@ main {
 .hero-chips .chip {
     padding: 8px 22px;
     border-radius: 999px;
-    background: var(--chip-bg);
-    border: 1px solid var(--card-border);
-    backdrop-filter: blur(calc(var(--glass-blur) * 0.45));
-    -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 0.45));
+    color: var(--hero-ink);
+    background: var(--hero-chip-bg);
+    border: 1px solid var(--hero-chip-border);
+    transition:
+        color 0.45s ease,
+        background-color 0.45s ease,
+        border-color 0.45s ease;
+    backdrop-filter: blur(var(--panel-frost-blur));
+    -webkit-backdrop-filter: blur(var(--panel-frost-blur));
+}
+
+/* 桌面端：logo 居左、标语居右，中间以细竖线分隔；整行宽度跟随内容，
+   超出视口可用宽度时标语列自行收窄换行 */
+@media (min-width: 981px) {
+    .hero-id {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 36px;
+        width: max-content;
+        max-width: calc(100vw - 40px);
+        justify-self: center;
+    }
+
+    .hero-tagline {
+        margin: 0;
+        padding-left: 36px;
+        border-left: 1px solid var(--card-border);
+        text-align: left;
+    }
 }
 
 .nav-socials {
@@ -853,20 +1188,178 @@ main {
     opacity: 1;
 }
 
+/* Load entrance + morph refocus for the nav groups. The fade/rise pair stays
+   first in both state lists so it never restarts; the last slot swaps names
+   on the floating toggle, restarting the refocus pulse in either direction. */
+.top-nav--floating .brand-mark,
+.top-nav--floating .nav-links,
+.top-nav--floating .nav-actions {
+    animation:
+        heroEnterFade 0.9s var(--enter-ease) backwards,
+        heroEnterRise 0.7s var(--enter-ease) backwards,
+        navRefocusIn 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.top-nav:not(.top-nav--floating) .brand-mark,
+.top-nav:not(.top-nav--floating) .nav-links,
+.top-nav:not(.top-nav--floating) .nav-actions {
+    animation:
+        heroEnterFade 0.9s var(--enter-ease) backwards,
+        heroEnterRise 0.7s var(--enter-ease) backwards,
+        navRefocusOut 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Three-value delays: first two stagger the fade/rise pair, third keeps the
+   morph refocus immediate. Same specificity as the state animation rules and
+   declared after them, so the shorthand can't reset the stagger. */
+.top-nav .nav-links {
+    animation-delay: 0.15s, 0.15s, 0s;
+}
+
+.top-nav .nav-actions {
+    animation-delay: 0.3s, 0.3s, 0s;
+}
+
 /* Media module */
 .media-carousel + .media-carousel {
     margin-top: 56px;
+}
+
+/* In-card frost: a blurred duplicate of the card's own image, revealed only
+   on the outer side via mask. Uses a plain filter (not backdrop-filter) so
+   it renders identically across compositing quirks. The frost pseudos are
+   toggled per card from the carousel scroll handler. */
+.media-video-card::before,
+.media-video-card::after,
+.media-asset-card::before,
+.media-asset-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    /* z-index 1, not 0: .media-asset-card img's resting opacity (.85) makes
+       the img a stacking context, and among z-index:0 contexts tree order
+       would paint it over ::before — hiding the left-edge frost. The badge,
+       play button and video name come later in tree order, so they stay on
+       top of the frost. */
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+    /* Soften both the scroll-state toggle and the hover clear */
+    transition: opacity 0.3s var(--enter-ease);
+    background-image: var(--card-img);
+    background-size: cover;
+    background-position: center;
+    filter: blur(12px);
+    transform: translateZ(0);
+}
+
+.media-video-card::before,
+.media-asset-card::before {
+    left: 0;
+    -webkit-mask-image: linear-gradient(to right, #000 20%, rgba(0, 0, 0, 0.55) 50%, transparent 75%);
+    mask-image: linear-gradient(to right, #000 20%, rgba(0, 0, 0, 0.55) 50%, transparent 75%);
+}
+
+.media-video-card::after,
+.media-asset-card::after {
+    right: 0;
+    -webkit-mask-image: linear-gradient(to left, #000 20%, rgba(0, 0, 0, 0.55) 50%, transparent 75%);
+    mask-image: linear-gradient(to left, #000 20%, rgba(0, 0, 0, 0.55) 50%, transparent 75%);
+}
+
+.media-asset-card::before,
+.media-asset-card::after {
+    border-radius: 16px;
+}
+
+.media-video-card.edge-blur-left::before,
+.media-asset-card.edge-blur-left::before,
+.media-video-card.edge-blur-right::after,
+.media-asset-card.edge-blur-right::after {
+    opacity: 1;
+}
+
+/* Edge fade on the scroller itself: cards dissolve as they approach the
+   clip edges, so a half-scrolled card melts out instead of ending in a
+   hard slice. The fade reaches to the touching card's center — wide enough
+   that its rounded silhouette stays inside the near-transparent zone.
+   Each side fades only while that side still hides cards; the carousel
+   scroll handler toggles the state classes below. --edge-fade is defined
+   next to each grid-auto-columns formula so the two stay in sync. */
+.media-videos,
+.media-assets {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--edge-fade-left, 0px), #000 calc(100% - var(--edge-fade-right, 0px)), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 var(--edge-fade-left, 0px), #000 calc(100% - var(--edge-fade-right, 0px)), transparent);
+    transition: --edge-fade-left 0.35s var(--enter-ease), --edge-fade-right 0.35s var(--enter-ease);
+}
+
+/* Registered as length-percentage so the calc(%)-based fade width animates
+   instead of snapping; browsers without @property keep the discrete
+   on/off toggle. */
+@property --edge-fade-left {
+    syntax: '<length-percentage>';
+    inherits: false;
+    initial-value: 0px;
+}
+
+@property --edge-fade-right {
+    syntax: '<length-percentage>';
+    inherits: false;
+    initial-value: 0px;
+}
+
+.media-videos.edge-hidden-left,
+.media-assets.edge-hidden-left {
+    --edge-fade-left: var(--edge-fade);
+}
+
+.media-videos.edge-hidden-right,
+.media-assets.edge-hidden-right {
+    --edge-fade-right: var(--edge-fade);
+}
+
+/* Inspecting mode: hovering a card that touches an edge clears its own
+   frost (crisp image) and the pink ring, but the anti-cut scroller fade
+   STAYS — without it the clip edge would slice the card raw. Keyboard
+   focus gets the same frost clear for the focused card. */
+.media-video-card.edge-blur-left:hover::before,
+.media-asset-card.edge-blur-left:hover::before,
+.media-video-card.edge-blur-right:hover::after,
+.media-asset-card.edge-blur-right:hover::after {
+    opacity: 0;
+}
+
+.media-video-card.edge-blur-left:hover,
+.media-video-card.edge-blur-right:hover {
+    border-color: var(--card-border);
+}
+
+.media-asset-card.edge-blur-left:hover img,
+.media-asset-card.edge-blur-right:hover img {
+    border-color: var(--card-border);
+}
+
+.media-video-card:focus-visible::before,
+.media-video-card:focus-visible::after,
+.media-asset-card:focus-visible::before,
+.media-asset-card:focus-visible::after {
+    opacity: 0;
 }
 
 .media-videos {
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: calc((100% - 48px) / 3);
+    /* Half a card: the fade reaches the edge card's center */
+    --edge-fade: calc((100% - 48px) / 6);
     gap: 24px;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
-    padding-bottom: 4px;
+    /* overflow-x:auto forces y-clipping; pad the clip zone so the hover lift
+       and shadow aren't cut, and cancel the layout shift with margins. */
+    padding: 8px 0 44px;
+    margin: -8px 0 -40px;
 }
 
 .media-videos::-webkit-scrollbar {
@@ -891,18 +1384,19 @@ main {
     height: 100%;
     object-fit: cover;
     display: block;
+    /* Own radius so composited hover-scaling can't flatten the corners */
+    border-radius: 21px;
     transition: transform 0.5s ease, opacity var(--transition);
 }
 
 .media-video-card:hover {
     transform: translateY(-4px);
     border-color: rgba(255, 159, 209, 0.4);
-    box-shadow: 0 26px 50px -28px rgba(0, 0, 0, 0.9);
+    box-shadow: 0 20px 40px -24px rgba(0, 0, 0, 0.9);
 }
 
 .media-video-card:hover img {
     transform: scale(1.04);
-    opacity: 0.82;
 }
 
 .media-play {
@@ -915,25 +1409,27 @@ main {
     border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.55);
     background: rgba(10, 7, 14, 0.42);
+    /* Above the edge-frost pseudos (z-index 1): ::after paints last in tree
+       order, so an equal z-index would blur the play button. */
+    z-index: 2;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.92);
     transition: transform var(--transition), background var(--transition);
 }
 
-.media-play::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 55%;
-    transform: translate(-50%, -50%);
-    border-left: 15px solid rgba(255, 255, 255, 0.92);
-    border-top: 9px solid transparent;
-    border-bottom: 9px solid transparent;
+.media-play svg {
+    width: 30px;
+    height: 30px;
+    display: block;
 }
 
 .media-video-card:hover .media-play {
     transform: translate(-50%, -50%) scale(1.1);
-    background: rgba(255, 79, 157, 0.35);
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .media-video-name {
@@ -941,9 +1437,11 @@ main {
     left: 0;
     right: 0;
     bottom: 0;
+    /* Above the edge-frost pseudos — see .media-play */
+    z-index: 2;
     padding: 34px 18px 14px;
     background: linear-gradient(to top, rgba(4, 3, 7, 0.88), transparent);
-    color: var(--text);
+    color: #ffffff;
     font-size: 0.92rem;
     font-weight: 600;
     text-align: center;
@@ -956,11 +1454,17 @@ main {
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: calc((100% - 64px) / 5);
+    /* Half a card: the fade reaches the edge card's center */
+    --edge-fade: calc((100% - 64px) / 10);
     gap: 16px;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
-    padding-bottom: 4px;
+    /* Same clip-zone deal as .media-videos: the hover shadow reaches
+       18px offset + 34px blur - 18px spread - 3px lift ≈ 31px below the
+       image, so reserve 40px and cancel the layout shift with margin. */
+    padding: 8px 0 40px;
+    margin: -8px 0 -36px;
 }
 
 .media-assets::-webkit-scrollbar {
@@ -975,6 +1479,13 @@ main {
     padding: 0;
     cursor: pointer;
     text-align: left;
+    /* Lift the card, not the img: the badge and the edge-frost pseudos are
+       positioned on the card and must ride along (matches .media-video-card). */
+    transition: transform var(--transition);
+}
+
+.media-asset-card:hover {
+    transform: translateY(-3px);
 }
 
 .media-asset-card img {
@@ -985,20 +1496,21 @@ main {
     border-radius: 16px;
     border: 1px solid var(--card-border);
     opacity: 0.85;
-    transition: opacity var(--transition), transform var(--transition), border-color var(--transition);
+    transition: opacity var(--transition), border-color var(--transition), box-shadow var(--transition);
 }
 
 .media-asset-card:hover img {
     opacity: 1;
-    transform: translateY(-3px);
     border-color: rgba(255, 159, 209, 0.4);
+    box-shadow: 0 18px 34px -18px rgba(0, 0, 0, 0.85);
 }
 
 .media-badge {
     position: absolute;
     top: 8px;
     left: 8px;
-    z-index: 1;
+    /* Above the edge-frost pseudos — see .media-play */
+    z-index: 2;
     padding: 7px;
     border-radius: 999px;
     background: rgba(10, 7, 14, 0.6);
@@ -1019,17 +1531,26 @@ main {
     gap: 18px;
 }
 
+/* Carousel paging arrows — same ink-adaptive glass as the hero arrows
+   and the back-to-top: chip palette + panel-level frost, so all paging
+   controls flip together with the hero ink. appearance:none + translateZ(0)
+   keep the backdrop blur sampling alive (see .hero-arrow note). */
 .media-arrow {
     width: 38px;
     height: 38px;
     border-radius: 50%;
-    border: 1px solid var(--media-ctrl-border);
-    background: var(--media-ctrl-bg);
-    color: var(--media-ctrl-color);
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid var(--hero-chip-border, var(--nav-floating-border));
+    background: var(--hero-chip-bg, var(--nav-bg));
+    backdrop-filter: blur(var(--paging-blur));
+    -webkit-backdrop-filter: blur(var(--paging-blur));
+    color: var(--hero-ink, var(--nav-text));
     display: grid;
     place-items: center;
     cursor: pointer;
-    transition: opacity var(--transition), background var(--transition), border-color var(--transition), transform var(--transition);
+    transform: translateZ(0);
+    transition: opacity var(--transition), background var(--transition), border-color var(--transition), transform var(--transition), color 0.45s ease;
 }
 
 .media-arrow svg {
@@ -1038,9 +1559,17 @@ main {
 }
 
 .media-arrow:hover {
-    background: var(--media-ctrl-bg);
-    border-color: var(--media-ctrl-color);
-    transform: translateY(-1px);
+    border-color: var(--hero-btn-border-hover, var(--nav-border-strong));
+    transform: scale(1.06) translateZ(0);
+}
+
+.media-arrow:active {
+    transform: scale(0.98) translateZ(0);
+}
+
+.media-arrow:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
 }
 
 .media-arrow.is-disabled {
@@ -1071,6 +1600,77 @@ main {
     margin-top: 48px;
     display: flex;
     justify-content: flex-end;
+}
+
+/* News / announcements — video-card style: cover image, date badge,
+   title overlaid on a bottom gradient. Title only, no snippet. */
+.news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+.news-card {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: 22px;
+    overflow: hidden;
+    border: 1px solid var(--card-border);
+    background: #000;
+    transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+
+.news-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 159, 209, 0.4);
+    box-shadow: 0 26px 50px -28px rgba(0, 0, 0, 0.9);
+}
+
+.news-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.5s ease, opacity var(--transition);
+}
+
+.news-card:hover img {
+    transform: scale(1.04);
+}
+
+.news-date {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(10, 7, 14, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+
+.news-title {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    margin: 0;
+    padding: 36px 18px 14px;
+    background: linear-gradient(to top, rgba(4, 3, 7, 0.88), transparent);
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Lightbox */
@@ -1129,7 +1729,9 @@ main {
 }
 
 .lightbox-caption {
-    color: var(--text-muted);
+    /* 灯箱遮罩恒为深色，文字颜色固定浅色，
+       不随 prefers-color-scheme 的主题变量翻转 */
+    color: #b9b1c8;
     font-size: 0.88rem;
     letter-spacing: 0.06em;
     text-align: center;
@@ -1144,10 +1746,19 @@ main {
     border-radius: 50%;
     border: 1px solid var(--glass-border);
     background: rgba(16, 12, 22, 0.85);
-    color: var(--text);
-    font-size: 1rem;
+    color: #fefaff;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
     transition: transform var(--transition), border-color var(--transition), color var(--transition);
+}
+
+.lightbox-close svg {
+    width: 18px;
+    height: 18px;
+    display: block;
 }
 
 .lightbox-close:hover {
@@ -1186,38 +1797,85 @@ main {
     opacity: 0.92;
 }
 
-.footer-socials {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-
-.footer-social-link {
-    width: 42px;
-    height: 42px;
-    border-radius: 999px;
+.footer-legal {
     display: grid;
-    place-items: center;
-    border: 1px solid var(--media-ctrl-border);
-    background: var(--media-ctrl-bg);
-    backdrop-filter: blur(calc(var(--glass-blur) * 0.45));
-    -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 0.45));
-    color: var(--media-ctrl-color);
-    transition: transform var(--transition), color var(--transition), border-color var(--transition), box-shadow var(--transition);
+    justify-items: end;
+    gap: 10px;
 }
 
-.footer-social-link:hover,
-.footer-social-link:focus-visible {
-    transform: translateY(-3px);
-    color: #fff;
-    border-color: rgba(255, 159, 209, 0.5);
-    box-shadow: 0 14px 28px -14px rgba(255, 79, 157, 0.65);
+.footer-mark {
+    width: 132px;
+    opacity: 0.92;
 }
 
 .footer-rights {
     color: var(--text-muted);
     font-size: 0.82rem;
     letter-spacing: 0.05em;
+}
+
+/* Socials live in the top nav on desktop; the footer copy shows only on mobile */
+.footer-actions {
+    display: none;
+}
+
+/* Floating back-to-top — ink-adaptive glass shared with every paging
+   control (hero arrows, media carousel arrows): chip palette + panel-level
+   frost, flipping with the hero ink wherever it sits. Centered via the X
+   half of `translate`, which also carries the show/hide rise; hover
+   scaling uses `transform`, so none of them fight. appearance:none +
+   translateZ(0) keep the backdrop blur sampling alive (see .hero-arrow). */
+.back-to-top {
+    position: fixed;
+    left: 50%;
+    bottom: 36px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid var(--hero-chip-border, var(--nav-floating-border));
+    background: var(--hero-chip-bg, var(--nav-bg));
+    backdrop-filter: blur(var(--paging-blur));
+    -webkit-backdrop-filter: blur(var(--paging-blur));
+    color: var(--hero-ink, var(--nav-text));
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    opacity: 0;
+    translate: -50% 10px;
+    transform: translateZ(0);
+    pointer-events: none;
+    z-index: 60;
+    transition: opacity var(--transition), translate var(--transition), transform var(--transition), border-color var(--transition), background var(--transition), color 0.45s ease;
+}
+
+.back-to-top svg {
+    width: 17px;
+    height: 17px;
+}
+
+.back-to-top.visible {
+    opacity: 0.78;
+    translate: -50% 0;
+    pointer-events: auto;
+}
+
+.back-to-top:hover,
+.back-to-top:focus-visible {
+    opacity: 1;
+    transform: scale(1.06) translateZ(0);
+    border-color: var(--hero-btn-border-hover, var(--nav-border-strong));
+    background: var(--hero-chip-bg, var(--nav-bg));
+}
+
+.back-to-top:active {
+    transform: scale(0.98) translateZ(0);
+}
+
+.back-to-top:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
 }
 
 .nav-backdrop {
@@ -1271,6 +1929,11 @@ main {
     .nav-container {
         width: 100%;
         gap: 16px;
+    }
+
+    /* nav-links is hidden here, so anchor nav-actions to the right edge */
+    .nav-actions {
+        margin-left: auto;
     }
 
     .lang-switch {
@@ -1352,16 +2015,17 @@ main {
         width: min(280px, 60vw);
     }
 
-.hero-tagline {
-        font-size: 1.05rem;
-    }
-
     .hero-pagination {
-        bottom: 36px;
+        bottom: 26px;
+        bottom: max(26px, calc(100% - 100svh + 26px));
     }
 
     .hero-arrow {
         display: none;
+    }
+
+    .back-to-top {
+        bottom: 20px;
     }
 
     .feature-card {
@@ -1370,11 +2034,13 @@ main {
 
     .media-videos {
         grid-auto-columns: calc((100% - 24px) / 1.35);
+        --edge-fade: calc((100% - 24px) / 2.7);
         gap: 16px;
     }
 
     .media-assets {
         grid-auto-columns: calc((100% - 32px) / 2.2);
+        --edge-fade: calc((100% - 32px) / 4.4);
         gap: 14px;
     }
 
@@ -1395,6 +2061,66 @@ main {
         flex-direction: column;
         text-align: center;
     }
+
+    .footer-brand {
+        justify-content: center;
+    }
+
+    /* Mobile-only footer socials (top-nav copy stays hidden above) */
+    .footer-actions {
+        display: block;
+    }
+
+    .footer-actions .nav-socials {
+        display: flex;
+        justify-content: center;
+    }
+
+    .footer-legal {
+        justify-items: center;
+    }
+}
+
+/* Short viewports (e.g. 1080p screens at 150% scaling, ~1280x620 CSS):
+   compact the hero composition so it still fits one screen — otherwise the
+   scroll cue's fold clamp would push it into the CTA. Keeps the cue visible
+   down to ~560px-tall viewports. Placed after the width queries so the
+   compact paddings also win on small phones. */
+@media (max-height: 720px) {
+    .hero {
+        padding-top: 96px;
+        padding-bottom: 88px;
+    }
+
+    .hero-logo {
+        width: min(280px, 44vw, 36vh);
+    }
+
+    .hero-overlay {
+        gap: 16px;
+    }
+
+    .hero-tagline {
+        margin-top: 8px;
+    }
+
+    .hero-buttons {
+        margin-top: 16px;
+    }
+}
+
+/* Below that, one screen can no longer hold the composition at all (phone
+   landscape): drop the cue instead of letting it overlap the CTA, and pin
+   the dots back to the hero bottom (the fold sits inside the content, so
+   the clamp would float them mid-hero). */
+@media (max-height: 540px) {
+    .hero-scroll {
+        display: none;
+    }
+
+    .hero-pagination {
+        bottom: 92px;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1408,7 +2134,10 @@ main {
 
     .reveal {
         opacity: 1 !important;
+        translate: none !important;
         transform: none !important;
+        filter: none !important;
+        animation: none !important;
     }
 
     .hero-slide.active {
@@ -1418,6 +2147,10 @@ main {
     .nav-links,
     .lang-switch,
     .nav-backdrop {
+        transition: none !important;
+    }
+
+    .nav-indicator {
         transition: none !important;
     }
 
@@ -1433,6 +2166,15 @@ main {
     .hero-chips {
         transform: none !important;
         transition: none !important;
+        animation: none !important;
+    }
+
+    .brand-mark,
+    .nav-links,
+    .nav-actions,
+    .hero-arrow,
+    .reveal {
+        animation: none !important;
     }
 }
 
@@ -1462,9 +2204,6 @@ main {
         --icon-chip-bg: rgba(26, 26, 46, 0.06);
         --icon-chip-color: var(--text);
         --card-index-color: rgba(255, 79, 157, 0.5);
-        --media-ctrl-bg: rgba(26, 26, 46, 0.04);
-        --media-ctrl-border: rgba(26, 26, 46, 0.18);
-        --media-ctrl-color: rgba(26, 26, 46, 0.78);
         --media-dot: rgba(26, 26, 46, 0.3);
         --media-dot-active: rgba(26, 26, 46, 0.9);
         --footer-bg: var(--bg-page);
@@ -1483,7 +2222,8 @@ main {
     }
 
     .nav-link:hover,
-    .nav-link:focus {
+    .nav-link:focus,
+    .nav-link.active {
         color: #1a1a2e;
     }
 
@@ -1496,29 +2236,38 @@ main {
         background: rgba(0, 0, 0, 0.08);
     }
 
-    /* 语言切换下拉面板 - 亮色模式 */
+    /* 语言切换下拉面板 - 玻璃模糊材质 */
     .lang-menu {
-        background: rgba(255, 255, 255, 0.4);
-        border-color: rgba(0, 0, 0, 0.08);
-        box-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.15);
-        backdrop-filter: blur(var(--glass-blur));
-        -webkit-backdrop-filter: blur(var(--glass-blur));
+        background: rgba(255, 255, 255, 0.14);
+        border-color: rgba(255, 255, 255, 0.5);
+        box-shadow:
+            0 16px 48px -12px rgba(0, 0, 0, 0.18),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(calc(var(--glass-blur) * 1.1)) saturate(1.6);
+        -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 1.1)) saturate(1.6);
+    }
+
+    /* Light tint for the page-blur curtain (base tint is dark). Kept on
+       body::before itself, NOT on .lang-menu-open, so the fade-out never
+       flashes the dark tint after the class drops. */
+    body::before {
+        background: rgba(250, 250, 252, 0.4);
     }
 
     .lang-option {
-        background: rgba(0, 0, 0, 0.05);
-        border-color: rgba(0, 0, 0, 0.08);
-        color: rgba(26, 26, 46, 0.8);
-        backdrop-filter: blur(calc(var(--glass-blur) * 0.45));
-        -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 0.45));
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.45);
+        color: rgba(26, 26, 46, 0.85);
+        backdrop-filter: blur(calc(var(--glass-blur) * 0.5)) saturate(1.3);
+        -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 0.5)) saturate(1.3);
     }
 
     .lang-option:hover,
     .lang-option:focus {
-        background: rgba(0, 0, 0, 0.09);
-        border-color: rgba(0, 0, 0, 0.15);
+        background: rgba(255, 255, 255, 0.48);
+        border-color: rgba(255, 255, 255, 0.65);
         color: #1a1a2e;
-        box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.12);
     }
 
     .lang-option.active {
@@ -1527,5 +2276,10 @@ main {
         color: #ffffff;
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
+    }
+
+    /* The SAKUSORA wordmark is white — flip it to black on the light footer */
+    .footer-mark {
+        filter: invert(1);
     }
 }

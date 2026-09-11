@@ -1,6 +1,7 @@
 ﻿const navItems = [
     { key: 'features', id: 'features' },
-    { key: 'media', id: 'media' }
+    { key: 'media', id: 'media' },
+    { key: 'news', id: 'news' }
 ];
 
 const heroBackgrounds = [
@@ -58,17 +59,47 @@ const heroSlideInterval = 6500;
 const heroVideoTimeout = 120000;
 const heroVideoInterval = 15000;
 
-/* Steam PV videos play first in the hero, then the key-visual images */
-const heroVideos = steamVideos.slice(0, 3);
+/* The hero leads with the PV trailers shuffled on each page load — gameplay
+   and demo videos stay out of the rotation. Background images keep their
+   fixed order and follow after. */
+function shuffleVideos(list) {
+    const copy = list.slice();
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+}
 
-const heroSlideData = [
+const isPvVideo = (video) => video.name.endsWith('_PV');
+
+let heroVideos = shuffleVideos(steamVideos.filter(isPvVideo)).slice(0, 3);
+
+let heroSlideData = [
     ...heroVideos.map((video) => ({ type: 'video', ...video })),
     ...heroBackgrounds.map((src) => ({ type: 'image', src }))
 ];
 
+/* Live media data (data/media-<lang>.json, refreshed daily by the update-news
+   workflow). The baked lists above are the offline fallback — the store API
+   sends no CORS headers, so the page can't fetch it directly. */
+let liveMedia = null;
+const getVideos = () => (liveMedia ? liveMedia.videos : steamVideos);
+const getScreenshots = () => (liveMedia ? liveMedia.screenshots : steamScreenshots);
+
+function rebuildMediaData() {
+    heroVideos = shuffleVideos(getVideos().filter(isPvVideo)).slice(0, 3);
+    heroSlideData = [
+        ...heroVideos.map((video) => ({ type: 'video', ...video })),
+        ...heroBackgrounds.map((src) => ({ type: 'image', src }))
+    ];
+    heroSlideIndex %= heroSlideData.length;
+}
+
 let heroMuted = true;
 
-/* IconPark outline icons (https://iconpark.oceanengine.com), MIT, inlined */
+/* IconPark outline icons (https://iconpark.oceanengine.com), MIT, inlined.
+   arrowUp / chevronLeft / chevronRight use the official upstream path data. */
 const iconPark = (() => {
     const wrap = (inner) =>
         `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">` +
@@ -111,16 +142,34 @@ const iconPark = (() => {
             stroke('M9.85791 10.1421C13.4772 13.7614 18.4772 16 24 16C29.5229 16 34.5229 13.7614 38.1422 10.1421') +
             stroke('M38.1422 37.8579C34.5229 34.2386 29.5229 32 24 32C18.4772 32 13.4772 34.2386 9.85791 37.8579')
         ),
+        playOne: wrap(
+            '<path d="M15 24V11.8756L25.5 17.9378L36 24L25.5 30.0622L15 36.1244V24Z" fill="__S__" stroke="__S__" stroke-width="4" stroke-linejoin="round"/>'
+        ),
+        close: wrap(
+            stroke('M8 8L40 40') +
+            stroke('M8 40L40 8')
+        ),
         chevronLeft: wrap(
-            '<path d="M29 10L15 24l14 14" stroke="__S__" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>'
+            '<path d="M31 36L19 24L31 12" stroke="__S__" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>'
         ),
         chevronRight: wrap(
-            '<path d="M19 10l14 14-14 14" stroke="__S__" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>'
+            '<path d="M19 12L31 24L19 36" stroke="__S__" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>'
+        ),
+        chevronDown: wrap(
+            '<path d="M10 19l14 14 14-14" stroke="__S__" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>'
+        ),
+        doubleDown: wrap(
+            '<path d="M10 13l14 14 14-14" stroke="__S__" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+            '<path d="M10 21l14 14 14-14" stroke="__S__" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>'
+        ),
+        arrowUp: wrap(
+            stroke('M24 6v36') +
+            stroke('M12 18L24 6l12 12')
         ),
         volumeUp: wrap(
             '<path d="M24 6V42C17 42 11.7985 32.8391 11.7985 32.8391H6C4.89543 32.8391 4 31.9437 4 30.8391V17.0108C4 15.9062 4.89543 15.0108 6 15.0108H11.7985C11.7985 15.0108 17 6 24 6Z" fill="none" stroke="__S__" stroke-width="4" stroke-linejoin="round"/>' +
-            stroke('M32 24H44') +
-            stroke('M38 18V30')
+            stroke('M32 15L32 15C32.6232 15.5565 33.1881 16.1797 33.6841 16.8588C35.1387 18.8504 36 21.3223 36 24C36 26.6545 35.1535 29.1067 33.7218 31.0893C33.2168 31.7885 32.6391 32.4293 32 33') +
+            stroke('M34.2359 41.1857C40.0836 37.6953 44 31.305 44 24C44 16.8085 40.2043 10.5035 34.507 6.97906')
         ),
         volumeMute: wrap(
             '<mask id="iconpark-volume-mute" maskUnits="userSpaceOnUse" x="30" y="18" width="13" height="13" style="mask-type: alpha">' +
@@ -150,20 +199,32 @@ function getInitialLanguage() {
     }
 
     const browserLang = (navigator.language || navigator.userLanguage || 'zh-CN').toLowerCase();
+    const base = browserLang.split(/[-_]/)[0];
 
-    // Check for specific matches first (e.g. zh-tw)
-    const exactMatch = supportedLanguages.find(lang => browserLang === lang.toLowerCase());
-    if (exactMatch) return exactMatch;
+    // Exact tag match, then exact base-language match (e.g. pt-br -> pt-BR)
+    let match = supportedLanguages.find((lang) => lang.toLowerCase() === browserLang)
+        || supportedLanguages.find((lang) => lang.toLowerCase() === base);
 
-    // Check for prefix matches (e.g. zh matches zh-CN)
-    // Preference: zh -> zh-CN
-    if (browserLang.startsWith('zh')) {
-        if (browserLang === 'zh-tw' || browserLang === 'zh-hk') return 'zh-TW';
-        return 'zh-CN';
+    // Chinese variants: Hant/TW/HK/MO -> zh-TW, everything else -> zh-CN
+    if (!match && browserLang.startsWith('zh')) {
+        return /(^|-)(hant|tw|hk|mo)(-|$)/.test(browserLang) ? 'zh-TW' : 'zh-CN';
     }
 
-    const prefixMatch = supportedLanguages.find((lang) => browserLang.startsWith(lang));
-    return prefixMatch || 'zh-CN';
+    // Norwegian Bokmål/Nynorsk report nb/nn, not "no"
+    if (!match && (base === 'nb' || base === 'nn')) {
+        match = 'no';
+    }
+
+    // Latin-American Spanish variants -> es-419 (plain "es" falls through to es-ES)
+    if (!match && base === 'es' && /^es-(419|ar|bo|cl|co|cr|do|ec|gt|hn|mx|ni|pa|pe|pr|py|sv|uy|us|ve)(-|$)/.test(browserLang)) {
+        match = 'es-419';
+    }
+
+    // Base-language prefix (e.g. pt -> pt-BR, es -> es-ES, first key listed wins)
+    if (!match) {
+        match = supportedLanguages.find((lang) => lang.toLowerCase().startsWith(base));
+    }
+    return match || 'zh-CN';
 }
 
 let currentLanguage = getInitialLanguage();
@@ -172,25 +233,55 @@ let heroSlideIndex = 0;
 let heroSlideTimer = null;
 
 function buildNavLinks(text) {
-    return navItems
-        .map(
-            (item) => `
+    return `
+            <span class="nav-indicator" aria-hidden="true"></span>
+            ${navItems
+                .map(
+                    (item) => `
                 <a class="nav-link" href="#${item.id}">${text.nav[item.key]}</a>
             `
-        )
-        .join('');
+                )
+                .join('')}
+        `;
 }
 
+/* Native language names, as shown in the language dropdown */
+const languageNames = {
+    en: 'English',
+    'zh-CN': '简体中文',
+    'zh-TW': '繁體中文',
+    ja: '日本語',
+    ko: '한국어',
+    fr: 'Français',
+    it: 'Italiano',
+    de: 'Deutsch',
+    'es-ES': 'Español (España)',
+    da: 'Dansk',
+    ru: 'Русский',
+    tr: 'Türkçe',
+    no: 'Norsk',
+    pl: 'Polski',
+    th: 'ไทย',
+    sv: 'Svenska',
+    fi: 'Suomi',
+    nl: 'Nederlands',
+    'pt-BR': 'Português (Brasil)',
+    'pt-PT': 'Português (Portugal)',
+    'es-419': 'Español (Latinoamérica)',
+    uk: 'Українська',
+    bg: 'Български',
+    hu: 'Magyar',
+    id: 'Bahasa Indonesia',
+    el: 'Ελληνικά',
+    cs: 'Čeština',
+    ro: 'Română',
+    vi: 'Tiếng Việt',
+    ar: 'العربية'
+};
+
 function buildLanguageDropdown(text) {
-    const options = supportedLanguages.map(lang => {
-        let label = lang;
-        switch (lang) {
-            case 'en': label = 'English'; break;
-            case 'zh-CN': label = '简体中文'; break;
-            case 'zh-TW': label = '繁體中文'; break;
-            case 'ja': label = '日本語'; break;
-            case 'ko': label = '한국어'; break;
-        }
+    const options = supportedLanguages.map((lang, index) => {
+        const label = languageNames[lang] || lang;
         const isActive = lang === currentLanguage;
         return `
             <button
@@ -198,6 +289,7 @@ function buildLanguageDropdown(text) {
                 class="lang-option ${isActive ? 'active' : ''}"
                 data-lang="${lang}"
                 role="menuitem"
+                style="--flyout-index:${index}"
             >
                 ${label}
             </button>
@@ -210,7 +302,7 @@ function buildLanguageDropdown(text) {
                 ${iconPark.earth}
             </button>
             <div class="lang-menu" role="menu">
-                ${options}
+                <div class="lang-menu-scroll">${options}</div>
             </div>
         </div>
     `;
@@ -251,10 +343,172 @@ const steamScreenshots = [
 ];
 
 const steamStoreUrl = 'https://store.steampowered.com/app/4142580/Live_Rise_4K_Fever/';
+const steamNewsUrl = 'https://store.steampowered.com/news/app/4142580';
+
+/* News data lives in data/news-<lang>.json (refreshed daily from the Steam API by
+   the update-news workflow) so the page can fetch it same-origin: the Steam
+   API itself sends no CORS headers. Card covers rotate through the Steam
+   key visuals — the news feed API carries no images. */
+const newsImages = steamScreenshots.map((src) => src.replace('.1920x1080.jpg', '.600x338.jpg'));
+const newsCache = {};
+
+const newsLocales = {
+    en: 'en-US',
+    'zh-CN': 'zh-CN',
+    'zh-TW': 'zh-TW',
+    ja: 'ja-JP',
+    ko: 'ko-KR',
+    fr: 'fr-FR',
+    it: 'it-IT',
+    de: 'de-DE',
+    'es-ES': 'es-ES',
+    da: 'da-DK',
+    ru: 'ru-RU',
+    tr: 'tr-TR',
+    no: 'nb-NO',
+    pl: 'pl-PL',
+    th: 'th-TH',
+    sv: 'sv-SE',
+    fi: 'fi-FI',
+    nl: 'nl-NL',
+    'pt-BR': 'pt-BR',
+    'pt-PT': 'pt-PT',
+    'es-419': 'es-419',
+    uk: 'uk-UA',
+    bg: 'bg-BG',
+    hu: 'hu-HU',
+    id: 'id-ID',
+    el: 'el-GR',
+    cs: 'cs-CZ',
+    ro: 'ro-RO',
+    vi: 'vi-VN',
+    ar: 'ar'
+};
+
+function escapeHtml(value) {
+    return (value || '').replace(/[&<>"']/g, (ch) => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+    ));
+}
+
+function buildNewsSection(text) {
+    return `
+        <section class="section section--news" id="news" aria-label="${text.sectionLabels.news}">
+            <div class="section-inner">
+                ${buildSectionHeading(text.news)}
+                <div class="news-grid" id="news-grid"></div>
+                <div class="media-foot">
+                    <a class="btn-cta-pill" href="${steamNewsUrl}" target="_blank" rel="noopener">
+                        <span>${text.news.viewAll}</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+    `;
+}
+
+function renderNewsCards(grid, items, text) {
+    if (!items || !items.length) {
+        grid.innerHTML = `
+            <a class="news-card reveal in-view" href="${steamNewsUrl}" target="_blank" rel="noopener">
+                <h3 class="news-title">${text.news.error}</h3>
+            </a>
+        `;
+        return;
+    }
+
+    const locale = newsLocales[currentLanguage] || 'en-US';
+    grid.innerHTML = items.map((item, index) => {
+        const date = new Date(item.date * 1000).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' });
+        const cover = item.image || newsImages[index % newsImages.length];
+        return `
+            <a class="news-card reveal" style="--reveal-delay:${(index * 0.15).toFixed(2)}s" href="${escapeHtml(item.url)}" target="_blank" rel="noopener">
+                <img src="${escapeHtml(cover)}" alt="" loading="lazy" />
+                <span class="news-date">${escapeHtml(date)}</span>
+                <h3 class="news-title">${escapeHtml(item.title)}</h3>
+            </a>
+        `;
+    }).join('');
+
+    /* Cards render after the reveal observer was created — register them */
+    grid.querySelectorAll('.reveal').forEach((el) => {
+        if (window.__liveRiseRevealObserver) {
+            window.__liveRiseRevealObserver.observe(el);
+        } else {
+            el.classList.add('in-view');
+        }
+    });
+}
+
+async function setupNews(root, text) {
+    const grid = root.querySelector('#news-grid');
+    if (!grid) {
+        return;
+    }
+
+    let items = newsCache[currentLanguage];
+    if (!items) {
+        const files = currentLanguage === 'en' ? ['data/news-en.json'] : [`data/news-${currentLanguage}.json`, 'data/news-en.json'];
+        for (const file of files) {
+            try {
+                const res = await fetch(file);
+                if (!res.ok) {
+                    continue;
+                }
+                const data = await res.json();
+                items = (data.appnews ? data.appnews.newsitems : data.newsitems || []).slice(0, 6);
+                newsCache[currentLanguage] = items;
+                break;
+            } catch (error) {
+                /* try the next source */
+            }
+        }
+    }
+    renderNewsCards(grid, items, text);
+}
+
+const mediaCache = {};
+
+function applyMedia(data) {
+    mediaCache[currentLanguage] = data;
+    const changed = JSON.stringify(data.videos) !== JSON.stringify(getVideos()) ||
+        JSON.stringify(data.screenshots) !== JSON.stringify(getScreenshots());
+    if (changed) {
+        liveMedia = data;
+        rebuildMediaData();
+        renderApp();
+    }
+}
+
+/* Pull the daily-refreshed media list; re-renders once only if it differs
+   from what the page was rendered with. */
+async function refreshMediaData() {
+    if (mediaCache[currentLanguage]) {
+        applyMedia(mediaCache[currentLanguage]);
+        return;
+    }
+    const files = currentLanguage === 'en' ? ['data/media-en.json'] : [`data/media-${currentLanguage}.json`, 'data/media-en.json'];
+    for (const file of files) {
+        try {
+            const res = await fetch(file);
+            if (!res.ok) {
+                continue;
+            }
+            const data = await res.json();
+            if (!Array.isArray(data.videos) || !Array.isArray(data.screenshots)) {
+                continue;
+            }
+            applyMedia(data);
+            return;
+        } catch (error) {
+            /* try the fallback file */
+        }
+    }
+}
 
 function buildMediaCarousel(inner, aria) {
     return `
-        <div class="media-carousel reveal">
+        <div class="media-carousel">
             ${inner}
             <div class="media-nav">
                 <button type="button" class="media-arrow" data-dir="-1" aria-label="${aria} ‹">${iconPark.chevronLeft}</button>
@@ -266,16 +520,16 @@ function buildMediaCarousel(inner, aria) {
 }
 
 function buildMedia(media) {
-    const videoCards = steamVideos.map((video, i) => `
-        <button type="button" class="media-video-card" data-video-index="${i}" aria-label="${media.videoAria}: ${video.name}">
+    const videoCards = getVideos().map((video, i) => `
+        <button type="button" class="media-video-card reveal" data-video-index="${i}" aria-label="${media.videoAria}: ${video.name}" style="--card-img:url('${video.thumb}'); --reveal-delay:${(i * 0.15).toFixed(2)}s">
             <img src="${video.thumb}" alt="" loading="lazy" />
-            <span class="media-play" aria-hidden="true"></span>
+            <span class="media-play" aria-hidden="true">${iconPark.playOne}</span>
             <span class="media-video-name">${video.name}</span>
         </button>
     `).join('');
 
-    const assetCards = steamScreenshots.map((src, i) => `
-        <button type="button" class="media-asset-card" data-asset-index="${i}" aria-label="${media.thumbAria} ${i + 1}">
+    const assetCards = getScreenshots().map((src, i) => `
+        <button type="button" class="media-asset-card reveal" data-asset-index="${i}" aria-label="${media.thumbAria} ${i + 1}" style="--card-img:url('${src.replace('.1920x1080.jpg', '.600x338.jpg')}'); --reveal-delay:${(i * 0.15).toFixed(2)}s">
             <span class="media-badge">${media.visualBadge}</span>
             <img src="${src.replace('.1920x1080.jpg', '.600x338.jpg')}" alt="" loading="lazy" />
         </button>
@@ -294,7 +548,7 @@ function buildMedia(media) {
 
 function buildFeatureCards(features) {
     return features.items.map((item, index) => `
-        <article class="feature-card reveal" style="--reveal-delay:${(index * 0.08).toFixed(2)}s">
+        <article class="feature-card reveal" style="--reveal-delay:${(index * 0.15).toFixed(2)}s">
             <span class="feature-card__icon">${iconPark[item.icon] || ''}</span>
             <h3>${item.title}</h3>
             <p>${item.text}</p>
@@ -328,14 +582,6 @@ function buildNavSocials() {
             `).join('')}
         </div>
     `;
-}
-
-function buildFooterSocials() {
-    return globalSocials.map(social => `
-        <a class="footer-social-link" href="${social.url}" target="_blank" rel="noopener" aria-label="${social.name}" title="${social.name}">
-            ${socialIcons[social.icon] || ''}
-        </a>
-    `).join('');
 }
 
 function setNavOpen(open) {
@@ -383,6 +629,7 @@ function setLanguage(lang) {
 
     navOpen = false;
     renderApp();
+    refreshMediaData();
 }
 
 function stopHeroSlides() {
@@ -470,7 +717,150 @@ function showHeroSlide(index) {
     });
     syncHeroMedia();
     scheduleNextSlide();
+    heroAdaptiveInk.update();
 }
+
+/* iOS-style adaptive hero text: sample the average luminance of the active
+   visual's central band (where the tagline and chips sit) and flip the hero
+   ink between dark-on-light and light-on-dark, with a hysteresis band so
+   borderline frames don't flicker. When pixels are unreadable (e.g. Safari's
+   native HLS taints the canvas) the sampler stays silent and keeps the
+   current color scheme. */
+const heroAdaptiveInk = (() => {
+    const SAMPLE_W = 32;
+    const SAMPLE_H = 18;
+    const LIGHT_INK_ABOVE = 0.62;
+    const DARK_INK_BELOW = 0.47;
+    const RECHECK_MS = 600;
+    const posterCache = new Map();
+    let canvas = null;
+    let ctx = null;
+    let tone = '';
+
+    function ensureContext() {
+        if (!canvas) {
+            canvas = document.createElement('canvas');
+            canvas.width = SAMPLE_W;
+            canvas.height = SAMPLE_H;
+            ctx = canvas.getContext('2d', { willReadFrequently: true });
+        }
+        return Boolean(ctx);
+    }
+
+    function textZoneLuma(source) {
+        const width = source.videoWidth || source.naturalWidth;
+        const height = source.videoHeight || source.naturalHeight;
+        const hero = document.querySelector('.hero');
+        if (!width || !height || !hero || !ensureContext()) {
+            return null;
+        }
+        /* Map the tagline+chips bounding box through the cover fit so the
+           sample covers exactly the pixels the text sits on. */
+        const scale = Math.max(hero.clientWidth / width, hero.clientHeight / height);
+        const offsetX = (hero.clientWidth - width * scale) / 2;
+        const offsetY = (hero.clientHeight - height * scale) / 2;
+        let x1 = Infinity;
+        let y1 = Infinity;
+        let x2 = -Infinity;
+        let y2 = -Infinity;
+        document.querySelectorAll('.hero-tagline, .hero-chips').forEach((el) => {
+            const box = el.getBoundingClientRect();
+            x1 = Math.min(x1, box.left);
+            y1 = Math.min(y1, box.top);
+            x2 = Math.max(x2, box.right);
+            y2 = Math.max(y2, box.bottom);
+        });
+        if (x2 <= x1 || y2 <= y1) {
+            return null;
+        }
+        const sx = Math.max(0, (x1 - offsetX) / scale);
+        const sy = Math.max(0, (y1 - offsetY) / scale);
+        const sw = Math.min(width - sx, (x2 - x1) / scale);
+        const sh = Math.min(height - sy, (y2 - y1) / scale);
+        if (sw <= 0 || sh <= 0) {
+            return null;
+        }
+        try {
+            ctx.drawImage(source, sx, sy, sw, sh, 0, 0, SAMPLE_W, SAMPLE_H);
+            const { data } = ctx.getImageData(0, 0, SAMPLE_W, SAMPLE_H);
+            let sum = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                sum += 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+            }
+            return sum / (data.length / 4) / 255;
+        } catch (error) {
+            return null; /* cross-origin media taints the canvas */
+        }
+    }
+
+    /* Poster fallback for sources whose frames can't be read directly. */
+    function posterLuma(url) {
+        let entry = posterCache.get(url);
+        if (!entry) {
+            const image = new Image();
+            entry = { image, state: 'loading' };
+            posterCache.set(url, entry);
+            image.addEventListener('load', () => { entry.state = 'ready'; }, { once: true });
+            image.addEventListener('error', () => { entry.state = 'failed'; }, { once: true });
+            image.crossOrigin = 'anonymous';
+            image.src = url;
+            return null;
+        }
+        if (entry.state !== 'ready' || !entry.image.naturalWidth) {
+            return null;
+        }
+        const luma = textZoneLuma(entry.image);
+        if (luma === null) {
+            entry.state = 'failed'; /* tainted: stop retrying this poster */
+        }
+        return luma;
+    }
+
+    function activeLuma() {
+        const slide = heroSlideData[heroSlideIndex];
+        if (!slide) {
+            return null;
+        }
+        if (slide.type === 'image') {
+            return posterLuma(slide.src);
+        }
+        const video = document.querySelector('.hero-slide--video.active video');
+        if (!video || video.readyState < 2 || !video.videoWidth) {
+            return null;
+        }
+        const luma = textZoneLuma(video);
+        return luma === null ? posterLuma(slide.thumb) : luma;
+    }
+
+    function update() {
+        if (document.hidden) {
+            return;
+        }
+        const luma = activeLuma();
+        if (luma === null) {
+            return;
+        }
+        const next = luma >= LIGHT_INK_ABOVE ? 'hero-on-light'
+            : luma <= DARK_INK_BELOW ? 'hero-on-dark'
+                : tone;
+        if (next === tone) {
+            return;
+        }
+        tone = next;
+        /* Body-level classes carry the ink beyond the hero: hero text and
+           arrows flip with the active visual, and so do the paging buttons
+           below the fold (media carousel arrows, back-to-top). */
+        [document.body, document.querySelector('.hero')]
+            .filter(Boolean)
+            .forEach((el) => {
+                el.classList.toggle('hero-on-light', tone === 'hero-on-light');
+                el.classList.toggle('hero-on-dark', tone === 'hero-on-dark');
+            });
+    }
+
+    setInterval(update, RECHECK_MS);
+    return { update };
+})();
 
 /* Scroll-snap carousel: arrows page through, dots reflect scroll position */
 function setupMediaCarousel(carousel) {
@@ -498,6 +888,22 @@ function setupMediaCarousel(carousel) {
         const maxScroll = scroller.scrollWidth - scroller.clientWidth - 4;
         prevBtn.classList.toggle('is-disabled', scroller.scrollLeft <= 4);
         nextBtn.classList.toggle('is-disabled', scroller.scrollLeft >= maxScroll);
+
+        /* Edge fade = affordance for "more cards beyond this edge": on while
+           that side still hides content; CSS dissolves cards into the clip
+           edge so a half-scrolled card never ends in a hard slice. */
+        scroller.classList.toggle('edge-hidden-left', scroller.scrollLeft > 4);
+        scroller.classList.toggle('edge-hidden-right', scroller.scrollLeft < maxScroll);
+
+        /* In-card frost on top: the touching card blurs its own outer band
+           while the scroller fade dissolves the cut line itself. */
+        const scrollerRect = scroller.getBoundingClientRect();
+        const edgeZone = 60;
+        Array.from(scroller.children).forEach((card) => {
+            const r = card.getBoundingClientRect();
+            card.classList.toggle('edge-blur-left', scroller.scrollLeft > 4 && r.left <= scrollerRect.left + edgeZone && r.right > scrollerRect.left);
+            card.classList.toggle('edge-blur-right', scroller.scrollLeft < maxScroll && r.right >= scrollerRect.right - edgeZone && r.left < scrollerRect.right);
+        });
     };
 
     const pageBy = (dir) => {
@@ -506,6 +912,21 @@ function setupMediaCarousel(carousel) {
 
     prevBtn.addEventListener('click', () => pageBy(-1));
     nextBtn.addEventListener('click', () => pageBy(1));
+
+    /* Cards beyond the current page stay unrevealed (clipped by the track).
+       Once the user pages, drop their entrance stagger so paged-in cards
+       show up right away instead of waiting on their index-based delay. */
+    let revealDelaysCleared = false;
+    scroller.addEventListener('scroll', () => {
+        if (revealDelaysCleared) {
+            return;
+        }
+        revealDelaysCleared = true;
+        scroller.querySelectorAll('.reveal').forEach((card) => {
+            card.style.setProperty('--reveal-delay', '0s');
+        });
+    }, { passive: true });
+
     scroller.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update, { passive: true });
     update();
@@ -537,7 +958,7 @@ function openVideoLightbox(video, label) {
         <figure class="lightbox-body">
             <video class="lightbox-video" controls playsinline></video>
             <figcaption class="lightbox-caption">${label} · ${video.name}</figcaption>
-            <button type="button" class="lightbox-close" aria-label="✕">✕</button>
+            <button type="button" class="lightbox-close" aria-label="${translations[currentLanguage].media.closeAria}">${iconPark.close}</button>
         </figure>
     `;
     document.body.appendChild(overlay);
@@ -568,7 +989,7 @@ function openImageLightbox(src, label) {
         <figure class="lightbox-body">
             <img class="lightbox-img" src="${src}" alt="${label}" />
             <figcaption class="lightbox-caption">${label}</figcaption>
-            <button type="button" class="lightbox-close" aria-label="✕">✕</button>
+            <button type="button" class="lightbox-close" aria-label="${translations[currentLanguage].media.closeAria}">${iconPark.close}</button>
         </figure>
     `;
     document.body.appendChild(overlay);
@@ -597,16 +1018,28 @@ function setupRevealAnimations(root) {
         return;
     }
 
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('in-view');
-                observer.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.16, rootMargin: '0px 0px -6% 0px' });
+    /* Fire when the element's top edge crosses 85% of the viewport height,
+       matching the benchmark motion's entry line */
+    const makeObserver = (rootMargin) => {
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('in-view');
+                    obs.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0, rootMargin });
+        return obs;
+    };
 
-    revealEls.forEach((el) => observer.observe(el));
+    const observer = makeObserver('0px 0px -15% 0px');
+    /* Page-end content (footer) sits inside the bottom 15% band at max
+       scroll, where the entry line can never be crossed — reveal those as
+       soon as they enter the viewport instead. */
+    const earlyObserver = makeObserver('0px 0px');
+    revealEls.forEach((el) => {
+        (el.hasAttribute('data-reveal-early') ? earlyObserver : observer).observe(el);
+    });
     window.__liveRiseRevealObserver = observer;
 }
 
@@ -687,15 +1120,20 @@ function renderApp() {
 
                     <div class="hero-overlay">
                         <h1 class="hero-title sr-only">${text.hero.title}</h1>
-                        <div class="hero-logo">
-                            <img src="images/Logo.png" alt="${text.hero.title}" />
+                        <div class="hero-id">
+                            <div class="hero-logo">
+                                <img src="images/Logo.png" alt="${text.hero.title}" />
+                            </div>
+                            <p class="hero-tagline">${text.hero.tagline}</p>
                         </div>
-                        <p class="hero-tagline">${text.hero.tagline}</p>
                         <div class="hero-chips">
                             ${buildHeroChips(text.hero.chips)}
                         </div>
                         <div class="hero-buttons">
                             <a class="btn btn-primary" href="${text.hero.primaryHref}" target="_blank" rel="noopener">${text.hero.primaryLabel}</a>
+                            <button type="button" class="hero-scroll" data-scroll-to="features" aria-label="${text.hero.scrollAria}">
+                                ${iconPark.doubleDown}
+                            </button>
                         </div>
                     </div>
 
@@ -734,19 +1172,28 @@ function renderApp() {
                         ${buildMedia(text.media)}
                     </div>
                 </section>
+
+                ${buildNewsSection(text)}
             </main>
 
             <footer class="footer">
                 <div class="footer-inner">
-                    <div class="footer-brand">
+                    <div class="footer-brand reveal" data-reveal-early style="--reveal-delay:0s">
                         <img class="footer-logo" src="images/Logo.png" alt="${text.brandLabel}" />
                     </div>
-                    <div class="footer-socials">
-                        ${buildFooterSocials()}
+                    <div class="footer-actions reveal" data-reveal-early style="--reveal-delay:0.15s">
+                        ${buildNavSocials()}
                     </div>
-                    <p class="footer-rights">${text.footer.rights}</p>
+                    <div class="footer-legal reveal" data-reveal-early style="--reveal-delay:0.3s">
+                        <img class="footer-mark" src="images/SakusoraLogo.png" alt="SAKUSORA" />
+                        <p class="footer-rights">${text.footer.rights}</p>
+                    </div>
                 </div>
             </footer>
+
+            <button type="button" class="back-to-top" aria-label="${text.toolbar.backToTop}" title="${text.toolbar.backToTop}">
+                ${iconPark.arrowUp}
+            </button>
         </div>
     `;
 
@@ -779,6 +1226,13 @@ function renderApp() {
                 showHeroSlide(heroSlideIndex + dir);
             });
         });
+
+        const heroScrollBtn = root.querySelector('.hero-scroll');
+        if (heroScrollBtn) {
+            heroScrollBtn.addEventListener('click', () => {
+                scrollToSection(heroScrollBtn.getAttribute('data-scroll-to'));
+            });
+        }
 
         const volumeBtn = root.querySelector('[data-volume]');
         if (volumeBtn) {
@@ -887,17 +1341,192 @@ function renderApp() {
         topNav.classList.toggle('top-nav--floating', shouldFloat);
     };
 
+    /* Back-to-top surfaces once scrolling crosses the hero's bottom edge —
+       the point where the second screen takes over the viewport */
+    const backToTopBtn = root.querySelector('.back-to-top');
+    const updateBackToTop = () => {
+        if (!backToTopBtn) {
+            return;
+        }
+        const heroHeight = heroSection ? heroSection.offsetHeight : window.innerHeight;
+        backToTopBtn.classList.toggle('visible', window.scrollY >= heroHeight);
+    };
+
+    /* Scrollspy: highlight the nav link matching the section in view; the
+       shared indicator slides between links on an eased, non-linear curve. */
+    const navLinksWrap = root.querySelector('.nav-links');
+    const navIndicator = navLinksWrap ? navLinksWrap.querySelector('.nav-indicator') : null;
+    const spyLinks = navLinksWrap ? Array.from(navLinksWrap.querySelectorAll('.nav-link')) : [];
+    const spySections = spyLinks
+        .map((link) => document.getElementById((link.getAttribute('href') || '').slice(1)))
+        .filter(Boolean);
+
+    let activeNavId = null;
+
+    const positionNavIndicator = (link, animate) => {
+        if (!navIndicator || !link) {
+            return;
+        }
+        if (!animate) {
+            navIndicator.style.transition = 'none';
+        }
+        navIndicator.style.width = `${link.offsetWidth}px`;
+        navIndicator.style.transform = `translateX(${link.offsetLeft}px)`;
+        if (!animate) {
+            void navIndicator.offsetWidth;
+            navIndicator.style.transition = '';
+        }
+    };
+
+    const setActiveNav = (id) => {
+        if (id === activeNavId) {
+            return;
+        }
+        /* First sync after a render must not animate from the default spot */
+        const animate = activeNavId !== null;
+        activeNavId = id;
+        let activeLink = null;
+        spyLinks.forEach((link) => {
+            const isActive = link.getAttribute('href') === `#${id}`;
+            link.classList.toggle('active', isActive);
+            if (isActive) {
+                activeLink = link;
+            }
+        });
+        if (navIndicator) {
+            navIndicator.classList.toggle('visible', Boolean(activeLink));
+            positionNavIndicator(activeLink, animate);
+        }
+    };
+
+    const updateActiveNav = () => {
+        if (!spySections.length) {
+            return;
+        }
+        const navOffset = 120;
+        let current = null;
+        spySections.forEach((section) => {
+            const top = section.getBoundingClientRect().top + window.scrollY;
+            if (window.scrollY + navOffset >= top) {
+                current = section.id;
+            }
+        });
+        /* Pin the last section when the page bottom can't reach its top */
+        if (!current && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2) {
+            current = spySections[spySections.length - 1].id;
+        }
+        setActiveNav(current);
+    };
+
+    /* Hover pulls the indicator to the pointer's target; leaving springs it
+       back to the scrollspy-driven active link. */
+    spyLinks.forEach((link) => {
+        link.addEventListener('mouseenter', () => positionNavIndicator(link, true));
+    });
+
+    if (navLinksWrap) {
+        navLinksWrap.addEventListener('mouseleave', () => {
+            const activeLink = spyLinks.find((link) => link.classList.contains('active'));
+            if (activeLink) {
+                positionNavIndicator(activeLink, true);
+            }
+        });
+    }
+
+    /* Webfont load changes link metrics — re-sync the pinned indicator */
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => {
+            const activeLink = spyLinks.find((link) => link.classList.contains('active'));
+            if (activeLink) {
+                positionNavIndicator(activeLink, false);
+            }
+        });
+    }
+
+    /* In-flight motion blur: while a nav-triggered jump scrolls the page,
+       main/footer blur in proportion to the measured scroll velocity, then
+       release as the scroll settles. Gated to programmatic scrolls so manual
+       scrolling never blurs, and driven by actual speed so the blur ramps
+       up mid-flight, peaks, and eases out on arrival. */
+    const motionBlurTargets = [root.querySelector('main'), root.querySelector('.footer')].filter(Boolean);
+    const motionBlurEnabled = motionBlurTargets.length > 0
+        && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const MOTION_BLUR_MIN_V = 900;   /* px/s where the blur starts ramping */
+    const MOTION_BLUR_FULL_V = 3800; /* px/s at full strength */
+    const MOTION_BLUR_MAX = 10;
+    let motionBlurLastY = window.scrollY;
+    let motionBlurLastT = 0;
+    let motionBlurVelocity = 0;
+    let motionBlurLevel = 0;
+
+    if (window.__liveRiseMotionBlurFrame) {
+        cancelAnimationFrame(window.__liveRiseMotionBlurFrame);
+        window.__liveRiseMotionBlurFrame = 0;
+    }
+
+    const applyMotionBlur = () => {
+        const active = motionBlurLevel >= 0.05;
+        motionBlurTargets.forEach((el) => {
+            el.classList.toggle('is-motion-blur', active);
+            el.style.setProperty('--scroll-blur', `${motionBlurLevel.toFixed(2)}px`);
+        });
+    };
+
+    const motionBlurFrame = () => {
+        window.__liveRiseMotionBlurFrame = 0;
+        const now = performance.now();
+        if (now - motionBlurLastT > 90) {
+            /* Scroll events stopped (arrival or interruption) — bleed speed off */
+            motionBlurVelocity *= 0.7;
+        }
+        const ramp = Math.min(Math.max((motionBlurVelocity - MOTION_BLUR_MIN_V) / (MOTION_BLUR_FULL_V - MOTION_BLUR_MIN_V), 0), 1);
+        const target = now < window.__liveRiseAutoScrollUntil ? ramp * MOTION_BLUR_MAX : 0;
+        motionBlurLevel += (target - motionBlurLevel) * (target > motionBlurLevel ? 0.42 : 0.16);
+        if (target === 0 && motionBlurLevel < 0.05) {
+            motionBlurLevel = 0;
+            applyMotionBlur();
+            return;
+        }
+        applyMotionBlur();
+        window.__liveRiseMotionBlurFrame = requestAnimationFrame(motionBlurFrame);
+    };
+
+    const handleMotionBlurScroll = () => {
+        if (!motionBlurEnabled) {
+            return;
+        }
+        const now = performance.now();
+        const y = window.scrollY;
+        const dt = Math.max(now - (motionBlurLastT || now - 16), 1);
+        const sample = Math.abs(y - motionBlurLastY) / dt * 1000;
+        motionBlurLastY = y;
+        motionBlurLastT = now;
+        motionBlurVelocity = motionBlurVelocity * 0.6 + sample * 0.4;
+        if (!window.__liveRiseMotionBlurFrame) {
+            window.__liveRiseMotionBlurFrame = requestAnimationFrame(motionBlurFrame);
+        }
+    };
+
+    const handleNavScroll = () => {
+        updateNavAppearance();
+        updateBackToTop();
+        updateActiveNav();
+        handleMotionBlurScroll();
+    };
+
     if (window.__liveRiseNavHandler) {
         window.removeEventListener('scroll', window.__liveRiseNavHandler);
     }
-    window.__liveRiseNavHandler = updateNavAppearance;
-    window.addEventListener('scroll', updateNavAppearance, { passive: true });
-    updateNavAppearance();
+    window.__liveRiseNavHandler = handleNavScroll;
+    window.addEventListener('scroll', handleNavScroll, { passive: true });
+    handleNavScroll();
 
     const navToggle = root.querySelector('.nav-toggle');
     const navLinks = root.querySelectorAll('.nav-links a');
 
     const scrollToSection = (id) => {
+        /* Arm the motion-blur gate: only this programmatic transit may blur */
+        window.__liveRiseAutoScrollUntil = performance.now() + 2500;
         if (!id || id === 'hero') {
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
@@ -934,17 +1563,81 @@ function renderApp() {
         });
     });
 
+    if (backToTopBtn) {
+        backToTopBtn.addEventListener('click', () => scrollToSection('hero'));
+    }
+
     const langToggle = root.querySelector('.lang-toggle');
     const langMenu = root.querySelector('.lang-menu');
     const langOptions = root.querySelectorAll('.lang-option');
 
+    /* Single switch for the dropdown; the body class drives the page-blur
+       curtain (body::before) that frosts everything but the nav and the menu */
+    const setLangMenuOpen = (open) => {
+        if (!langToggle || !langMenu) {
+            return;
+        }
+        langToggle.setAttribute('aria-expanded', String(open));
+        langMenu.classList.toggle('open', open);
+        langToggle.classList.toggle('open', open);
+        document.body.classList.toggle('lang-menu-open', open);
+    };
+
     if (langToggle && langMenu) {
+        // The nav's own backdrop-filter forms a backdrop root that stops any
+        // descendant's backdrop blur from sampling the page behind it, so the
+        // menu is portaled to <body> and pinned under the toggle (fixed).
+        document.body.querySelectorAll(':scope > .lang-menu').forEach((stale) => stale.remove());
+        document.body.appendChild(langMenu);
+        document.body.classList.remove('lang-menu-open');
+        const langMenuScroll = langMenu.querySelector('.lang-menu-scroll');
+        // Enable each edge fade only while that side still hides scrolled-out
+        // options; re-evaluated every frame while the menu is open
+        const updateLangMenuFades = () => {
+            if (!langMenuScroll) {
+                return;
+            }
+            langMenuScroll.classList.toggle('fade-top', langMenuScroll.scrollTop > 2);
+            langMenuScroll.classList.toggle('fade-bottom',
+                langMenuScroll.scrollTop + langMenuScroll.clientHeight < langMenuScroll.scrollHeight - 2);
+        };
+        let langMenuSyncFrame = 0;
+        const positionLangMenu = () => {
+            const rect = langToggle.getBoundingClientRect();
+            langMenu.style.top = Math.round(rect.bottom + 12) + 'px';
+            langMenu.style.right = Math.round(window.innerWidth - rect.right) + 'px';
+        };
+        const syncLangMenuPosition = () => {
+            if (!langMenu.classList.contains('open') || !langToggle.isConnected) {
+                langMenuSyncFrame = 0;
+                return;
+            }
+            positionLangMenu();
+            updateLangMenuFades();
+            langMenuSyncFrame = requestAnimationFrame(syncLangMenuPosition);
+        };
+        const openLangMenu = () => {
+            positionLangMenu();
+            // Compute the initial fades synchronously: background tabs get
+            // their rAF deeply throttled, so the first loop frame may be
+            // seconds away
+            updateLangMenuFades();
+            if (!langMenuSyncFrame) {
+                langMenuSyncFrame = requestAnimationFrame(syncLangMenuPosition);
+            }
+        };
+        // Scroll events refresh the edge fades immediately, independent of rAF
+        if (langMenuScroll) {
+            langMenuScroll.addEventListener('scroll', updateLangMenuFades, { passive: true });
+        }
+
         langToggle.addEventListener('click', (e) => {
             e.stopPropagation();
             const expanded = langToggle.getAttribute('aria-expanded') === 'true';
-            langToggle.setAttribute('aria-expanded', String(!expanded));
-            langMenu.classList.toggle('open', !expanded);
-            langToggle.classList.toggle('open', !expanded);
+            if (!expanded) {
+                openLangMenu();
+            }
+            setLangMenuOpen(!expanded);
         });
 
         // Close dropdown when clicking outside (single global listener, re-registered per render)
@@ -957,9 +1650,7 @@ function renderApp() {
                 return;
             }
             if (!langToggle.contains(e.target) && !langMenu.contains(e.target)) {
-                langToggle.setAttribute('aria-expanded', 'false');
-                langMenu.classList.remove('open');
-                langToggle.classList.remove('open');
+                setLangMenuOpen(false);
             }
         };
         window.__liveRiseLangOutsideHandler = handleLangOutside;
@@ -973,11 +1664,7 @@ function renderApp() {
                 setLanguage(lang);
             } else {
                 // Just close if same language
-                if (langToggle) {
-                    langToggle.setAttribute('aria-expanded', 'false');
-                    langMenu.classList.remove('open');
-                    langToggle.classList.remove('open');
-                }
+                setLangMenuOpen(false);
             }
         });
     });
@@ -986,7 +1673,7 @@ function renderApp() {
 
     root.querySelectorAll('.media-video-card').forEach((card) => {
         card.addEventListener('click', () => {
-            const video = steamVideos[Number(card.getAttribute('data-video-index'))];
+            const video = getVideos()[Number(card.getAttribute('data-video-index'))];
             if (video) {
                 openVideoLightbox(video, translations[currentLanguage].media.videoBadge);
             }
@@ -996,7 +1683,7 @@ function renderApp() {
     root.querySelectorAll('.media-asset-card').forEach((card) => {
         card.addEventListener('click', () => {
             const index = Number(card.getAttribute('data-asset-index'));
-            const src = steamScreenshots[index];
+            const src = getScreenshots()[index];
             if (src) {
                 const media = translations[currentLanguage].media;
                 openImageLightbox(src, `${media.visualLabel} ${String(index + 1).padStart(2, '0')}`);
@@ -1005,6 +1692,7 @@ function renderApp() {
     });
 
     setupRevealAnimations(root);
+    setupNews(root, text);
 
     if (window.__liveRiseResizeHandler) {
         window.removeEventListener('resize', window.__liveRiseResizeHandler);
@@ -1015,6 +1703,10 @@ function renderApp() {
         }
         if (typeof window.__liveRiseNavHandler === 'function') {
             window.__liveRiseNavHandler();
+        }
+        const activeSpyLink = root.querySelector('.nav-link.active');
+        if (activeSpyLink) {
+            positionNavIndicator(activeSpyLink, false);
         }
         if (typeof window.__liveRiseHeroParallaxResize === 'function') {
             window.__liveRiseHeroParallaxResize();
@@ -1031,6 +1723,7 @@ document.addEventListener('keydown', (event) => {
 });
 
 renderApp();
+refreshMediaData();
 
 if (window.location.hash) {
     history.replaceState(null, '', window.location.pathname + window.location.search);
