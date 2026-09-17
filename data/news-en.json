@@ -3,6 +3,12 @@
     "appid": 4142580,
     "newsitems": [
       {
+        "title": "Teaser｜",
+        "url": "https://store.steampowered.com/news/app/4142580/view/668376859863416926",
+        "date": 1789560978,
+        "image": "https://clan.fastly.steamstatic.com/images/45858295/b52964ec1f552e1742f5c474747b1e9d01bb71e7.png"
+      },
+      {
         "title": "Senpai… happy Qixi Festival.",
         "url": "https://store.steampowered.com/news/app/4142580/view/671752023818895398",
         "date": 1787133673,
@@ -31,12 +37,6 @@
         "url": "https://store.steampowered.com/news/app/4142580/view/696516748689545064",
         "date": 1783496892,
         "image": "https://clan.fastly.steamstatic.com/images/45858295/3aad1af217e5f0207060a47692657e48aa2c1e91.png"
-      },
-      {
-        "title": "Update | Official Wallpapers Pack Now Available",
-        "url": "https://store.steampowered.com/news/app/4142580/view/696516748689540317",
-        "date": 1782719755,
-        "image": "https://clan.fastly.steamstatic.com/images/45858295/63f260064e9bb7bc9df4799c480b1108b74af240.png"
       }
     ]
   }
