@@ -16,8 +16,6 @@
     --frost-blur: 20px;
     /* chip 面板与翻页按钮共用的磨砂强度(按钮以 chip 为基准) */
     --panel-frost-blur: calc(var(--glass-blur) * 0.45);
-    /* 翻页按钮专属:常驻背景多为低细节软画面,需要更强磨砂才可感知 */
-    --paging-blur: 40px;
     --glass-border: rgba(255, 255, 255, 0.18);
     --glass-tint-dark: rgba(20, 16, 28, 0.62);
     --glass-tint-light: rgba(255, 255, 255, 0.12);
@@ -876,37 +874,59 @@ main {
 }
 
 /* Hero prev/next arrows — ink-adaptive glass shared with every paging
-   control (media carousel arrows, back-to-top): chip palette + panel-level
-   frost, recolored by the hero ink on every luminance flip (nav vars only
-   cover the pre-sample moments). appearance:none strips the UA button
-   theme layer that suppresses backdrop sampling, and translateZ(0) keeps
-   each disc on its own compositing layer. */
+   control (hero scroll cue, media carousel arrows, back-to-top): chip
+   palette + panel-level frost, recolored by the hero ink on every
+   luminance flip (nav vars only cover the pre-sample moments). The glass
+   itself lives on a NON-positioned ::before sharing the button's single
+   grid cell: Chromium silently drops backdrop-filter on the fixed/absolute
+   paging elements themselves at any z-index, while static in-flow elements
+   (the hero chips) frost for real — same structure as .back-to-top.
+   appearance:none strips the UA button theme layer, and translateZ(0)
+   keeps each disc on its own compositing layer so the fog gradient
+   pseudo-element can't swallow its painting. */
 .hero-arrow {
     position: absolute;
     top: 50%;
     transform: translateY(-50%) translateZ(0);
     width: 38px;
     height: 38px;
-    border-radius: 50%;
     appearance: none;
     -webkit-appearance: none;
-    border: 1px solid var(--hero-chip-border, var(--nav-floating-border));
-    background: var(--hero-chip-bg, var(--nav-bg));
-    backdrop-filter: blur(var(--paging-blur));
-    -webkit-backdrop-filter: blur(var(--paging-blur));
+    border: none;
+    background: none;
     color: var(--hero-ink, var(--nav-text));
     display: grid;
     place-items: center;
     cursor: pointer;
-    opacity: 0.78;
     z-index: 2;
     animation:
         heroEnterFade 0.9s var(--enter-ease) 0.45s backwards,
         heroEnterRise 0.7s var(--enter-ease) 0.45s backwards;
-    transition: opacity var(--transition), transform var(--transition), border-color var(--transition), background var(--transition), color 0.45s ease;
+    transition: transform var(--transition), color 0.45s ease;
 }
 
-.hero-arrow svg {
+.back-to-top::before,
+.hero-arrow::before,
+.hero-scroll::before,
+.media-arrow::before {
+    content: '';
+    grid-area: 1 / 1;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 1px solid var(--hero-chip-border, var(--nav-floating-border));
+    background: var(--hero-chip-bg, var(--nav-bg));
+    backdrop-filter: blur(var(--panel-frost-blur));
+    -webkit-backdrop-filter: blur(var(--panel-frost-blur));
+    transition: border-color var(--transition), background var(--transition);
+}
+
+.back-to-top svg,
+.hero-arrow svg,
+.hero-scroll svg,
+.media-arrow svg {
+    grid-area: 1 / 1;
+    position: relative;
     width: 17px;
     height: 17px;
 }
@@ -919,12 +939,15 @@ main {
     right: 40px;
 }
 
-.hero-arrow:hover,
-.hero-arrow:focus-visible {
-    opacity: 1;
-    transform: translateY(-50%) scale(1.06) translateZ(0);
+.hero-arrow:hover::before,
+.hero-arrow:focus-visible::before {
     border-color: var(--hero-btn-border-hover, var(--nav-border-strong));
     background: var(--hero-chip-bg, var(--nav-bg));
+}
+
+.hero-arrow:hover,
+.hero-arrow:focus-visible {
+    transform: translateY(-50%) scale(1.06) translateZ(0);
 }
 
 .hero-arrow:active {
@@ -936,21 +959,26 @@ main {
     outline-offset: 3px;
 }
 
-/* Hero scroll-down cue — bare double-chevron hanging right below the
-   primary download button (its positioned parent). */
+/* Hero scroll-down cue — the same ink-adaptive glass disc as every paging
+   control (hero side arrows, media carousel arrows, back-to-top): chip
+   palette + panel-level frost on a NON-positioned ::before (see
+   .hero-arrow for why), hanging right below the primary download button
+   (its positioned parent). translateZ(0) keeps the disc on its own
+   compositing layer — Chromium sometimes drops an unlayered element's own
+   painting when the fog gradient pseudo-element sits behind it, leaving
+   the chevron invisible. */
 .hero-scroll {
     position: absolute;
     left: 50%;
     top: calc(100% + 14px);
-    /* translateZ(0) layers the button: Chromium sometimes drops an
-       unlayered element's own painting when the fog gradient pseudo-element
-       sits behind it, leaving the chevron invisible. The side arrows are
-       immune only because their opacity 0.78 layers them already. */
     transform: translateX(-50%) translateZ(0);
-    padding: 6px;
+    width: 38px;
+    height: 38px;
+    appearance: none;
+    -webkit-appearance: none;
     border: none;
     background: none;
-    color: rgba(255, 255, 255, 0.88);
+    color: var(--hero-ink, var(--nav-text));
     display: grid;
     place-items: center;
     cursor: pointer;
@@ -959,18 +987,22 @@ main {
         heroEnterFade 0.9s var(--enter-ease) 0.6s backwards,
         heroEnterRise 0.7s var(--enter-ease) 0.6s backwards,
         heroScrollNudge 2.6s ease-in-out 1.6s infinite;
-    transition: opacity var(--transition), transform var(--transition), color var(--transition);
+    transition: transform var(--transition), color 0.45s ease;
 }
 
-.hero-scroll svg {
-    width: 22px;
-    height: 22px;
+.hero-scroll:hover::before,
+.hero-scroll:focus-visible::before {
+    border-color: var(--hero-btn-border-hover, var(--nav-border-strong));
+    background: var(--hero-chip-bg, var(--nav-bg));
 }
 
 .hero-scroll:hover,
 .hero-scroll:focus-visible {
-    transform: translateX(-50%) translateZ(0) scale(1.08);
-    color: #ffffff;
+    transform: translateX(-50%) scale(1.06) translateZ(0);
+}
+
+.hero-scroll:active {
+    transform: translateX(-50%) scale(0.98) translateZ(0);
 }
 
 .hero-scroll:focus-visible {
@@ -1532,34 +1564,30 @@ body.hero-on-dark {
 }
 
 /* Carousel paging arrows — same ink-adaptive glass as the hero arrows
-   and the back-to-top: chip palette + panel-level frost, so all paging
-   controls flip together with the hero ink. appearance:none + translateZ(0)
-   keep the backdrop blur sampling alive (see .hero-arrow note). */
+   and the back-to-top: chip palette + panel-level frost on a
+   NON-positioned ::before (see .hero-arrow note), so all paging controls
+   flip together with the hero ink. */
 .media-arrow {
     width: 38px;
     height: 38px;
-    border-radius: 50%;
     appearance: none;
     -webkit-appearance: none;
-    border: 1px solid var(--hero-chip-border, var(--nav-floating-border));
-    background: var(--hero-chip-bg, var(--nav-bg));
-    backdrop-filter: blur(var(--paging-blur));
-    -webkit-backdrop-filter: blur(var(--paging-blur));
+    border: none;
+    background: none;
     color: var(--hero-ink, var(--nav-text));
     display: grid;
     place-items: center;
     cursor: pointer;
     transform: translateZ(0);
-    transition: opacity var(--transition), background var(--transition), border-color var(--transition), transform var(--transition), color 0.45s ease;
+    transition: transform var(--transition), color 0.45s ease;
 }
 
-.media-arrow svg {
-    width: 17px;
-    height: 17px;
+.media-arrow:hover::before {
+    border-color: var(--hero-btn-border-hover, var(--nav-border-strong));
+    background: var(--hero-chip-bg, var(--nav-bg));
 }
 
 .media-arrow:hover {
-    border-color: var(--hero-btn-border-hover, var(--nav-border-strong));
     transform: scale(1.06) translateZ(0);
 }
 
@@ -1671,6 +1699,49 @@ body.hero-on-dark {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* Characters — full-width art panels scraped from the Steam store page
+   description. The art carries its own name plate and framing, so each
+   panel stays chrome-light: the shared badge chip and card lift only. */
+.character-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 28px;
+}
+
+.character-card {
+    position: relative;
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    overflow: hidden;
+    background: var(--card-bg);
+    padding: 0;
+    cursor: pointer;
+    transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+
+.character-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 159, 209, 0.4);
+    box-shadow: 0 26px 50px -28px rgba(0, 0, 0, 0.9);
+}
+
+.character-card img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.5s ease;
+}
+
+.character-card:hover img {
+    transform: scale(1.03);
+}
+
+.character-card:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
 }
 
 /* Lightbox */
@@ -1819,58 +1890,76 @@ body.hero-on-dark {
     display: none;
 }
 
-/* Floating back-to-top — ink-adaptive glass shared with every paging
-   control (hero arrows, media carousel arrows): chip palette + panel-level
-   frost, flipping with the hero ink wherever it sits. Centered via the X
-   half of `translate`, which also carries the show/hide rise; hover
-   scaling uses `transform`, so none of them fight. appearance:none +
-   translateZ(0) keep the backdrop blur sampling alive (see .hero-arrow). */
+/* Floating back-to-top — the same chip-palette + panel-level frost glass
+   as every paging control (hero arrows, media carousel arrows), but pinned
+   to the light ink values: unlike those it never sits on the hero imagery —
+   it floats over the flat dark background below the fold, where a dark-ink
+   flip would drop the tint to 0.14 white and blur over flat color blurs to
+   itself, leaving the disc looking bare. Pinned here it stays the bright
+   glass chip this section's design language already uses (View All).
+   Centered via the X half of `translate`, which also carries the show/hide
+   rise; hover scaling uses `transform`, so none of them fight.
+   appearance:none + translateZ(0) keep the backdrop blur sampling alive
+   (see .hero-arrow). */
 .back-to-top {
-    position: fixed;
-    left: 50%;
-    bottom: 36px;
+    --hero-chip-bg: rgba(255, 255, 255, 0.45);
+    --hero-chip-border: rgba(26, 26, 46, 0.12);
+    --hero-btn-border-hover: rgba(26, 26, 46, 0.4);
+    --hero-ink: #1a1a2e;
+    /* Distance from the viewport bottom the disc rests at; the responsive
+       query overrides it to 20px. script.js feeds --btt-follow-y =
+       scrollY + viewport height, so this top tracks the viewport bottom
+       while the shell stays absolute inside .page. */
+    --btt-gap: 36px;
+    position: absolute;
+    left: calc(50% - 19px);
+    top: calc(var(--btt-follow-y, 100vh) - 38px - var(--btt-gap));
     width: 38px;
     height: 38px;
-    border-radius: 50%;
     appearance: none;
     -webkit-appearance: none;
-    border: 1px solid var(--hero-chip-border, var(--nav-floating-border));
-    background: var(--hero-chip-bg, var(--nav-bg));
-    backdrop-filter: blur(var(--paging-blur));
-    -webkit-backdrop-filter: blur(var(--paging-blur));
+    border: none;
+    background: none;
     color: var(--hero-ink, var(--nav-text));
     display: grid;
     place-items: center;
     cursor: pointer;
     opacity: 0;
-    translate: -50% 10px;
-    transform: translateZ(0);
+    transform: translate3d(0, 10px, 0);
     pointer-events: none;
-    z-index: 60;
-    transition: opacity var(--transition), translate var(--transition), transform var(--transition), border-color var(--transition), background var(--transition), color 0.45s ease;
+    z-index: 150;
+    transition: opacity var(--transition), transform var(--transition), color 0.45s ease;
 }
 
-.back-to-top svg {
-    width: 17px;
-    height: 17px;
-}
+/* The glass itself lives on a NON-positioned ::before (shared with
+   .hero-arrow / .hero-scroll above). Chromium only renders backdrop-filter
+   reliably on in-flow (static) elements — the hero chips prove it — and
+   the fixed layer was the one context even that static layer couldn't
+   frost in. The shell is therefore absolute inside .page; script.js
+   feeds --btt-follow-y on every scroll/resize so the disc tracks the
+   viewport bottom. The ::before shares the shell's single grid cell with
+   the chevron (declared after it, so the chevron still paints on top). */
 
 .back-to-top.visible {
     opacity: 0.78;
-    translate: -50% 0;
+    transform: translate3d(0, 0, 0);
     pointer-events: auto;
+}
+
+.back-to-top:hover::before,
+.back-to-top:focus-visible::before {
+    border-color: var(--hero-btn-border-hover, var(--nav-border-strong));
+    background: var(--hero-chip-bg, var(--nav-bg));
 }
 
 .back-to-top:hover,
 .back-to-top:focus-visible {
     opacity: 1;
-    transform: scale(1.06) translateZ(0);
-    border-color: var(--hero-btn-border-hover, var(--nav-border-strong));
-    background: var(--hero-chip-bg, var(--nav-bg));
+    transform: translate3d(0, 0, 0) scale(1.06);
 }
 
 .back-to-top:active {
-    transform: scale(0.98) translateZ(0);
+    transform: translate3d(0, 0, 0) scale(0.98);
 }
 
 .back-to-top:focus-visible {
@@ -2025,11 +2114,19 @@ body.hero-on-dark {
     }
 
     .back-to-top {
-        bottom: 20px;
+        --btt-gap: 20px;
     }
 
     .feature-card {
         padding: 26px 22px;
+    }
+
+    .character-grid {
+        gap: 18px;
+    }
+
+    .character-card {
+        border-radius: 18px;
     }
 
     .media-videos {

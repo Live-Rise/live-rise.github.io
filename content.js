@@ -13,6 +13,7 @@
         },
         nav: {
             features: 'Features',
+            characters: 'Characters',
             media: 'Media',
             news: 'News',
             cta: 'Download'
@@ -25,6 +26,7 @@
         sectionLabels: {
             hero: 'Hero showcase visuals',
             features: 'Game features',
+            characters: 'Characters',
             media: 'Official media',
             news: 'Announcements'
         },
@@ -49,6 +51,12 @@
                 { icon: 'editing', title: 'Powerful Chart Editor', text: 'Intuitive editing, instant preview and one-click publishing. Tailor charts to your songs and share them with players worldwide.' },
                 { icon: 'share', title: 'Community & Cloud', text: 'Imports mainstream community chart formats with ease, while the new scoring system and Steam Cloud keep every improvement in sync.' }
             ]
+        },
+        characters: {
+            heading: 'Characters',
+            lead: 'The cast of Live Rise!! and their official character art.',
+            badge: 'Character',
+            thumbAria: 'View character art'
         },
         media: {
             heading: 'Media',
@@ -85,6 +93,7 @@
         },
         nav: {
             features: '游戏特色',
+            characters: '角色',
             media: '媒体',
             news: '公告',
             cta: '下载'
@@ -97,6 +106,7 @@
         sectionLabels: {
             hero: '首屏视觉展示',
             features: '游戏特色',
+            characters: '登场角色',
             media: '官方媒体',
             news: '最新公告'
         },
@@ -113,14 +123,20 @@
             scrollAria: '向下滚动查看内容'
         },
         features: {
-            heading: '指尖之上的 4K 舞台',
-            lead: '欢迎来到梦羽的节奏世界<br>为你重构的 4 轨下落式音游。在这里，你不仅是玩家，还是创作者。',
+            heading: '律动，跃于指尖',
+            lead: '为你重构的 4 轨下落式音游。在这里，你不仅是玩家，还是创作者。',
             items: [
                 { icon: 'music', title: '专注 4K 模式', text: '经典 4 轨下落式玩法，与节奏共舞；难度可选，新手到高手都能循序提升。' },
                 { icon: 'diamond', title: '雾面玻璃音符设计', text: '半透明层次与清晰判定，让节奏更易读；每次敲击，全然沉浸。' },
                 { icon: 'editing', title: '强大的谱面编辑器', text: '直观编辑、即刻预览、一键发布；为你的歌曲定制专属谱面并分享全球。' },
                 { icon: 'share', title: '社区与云端', text: '兼容主流社区音游谱面格式，轻松导入曲库；全新计分系统与 Steam 云存档，同步你的每次进步。' }
             ]
+        },
+        characters: {
+            heading: '角色',
+            lead: '欢迎来到梦羽的节奏世界',
+            badge: '立绘',
+            thumbAria: '查看角色立绘'
         },
         media: {
             heading: '媒体',
@@ -157,6 +173,7 @@
         },
         nav: {
             features: '遊戲特色',
+            characters: '角色',
             media: '畫廊',
             news: '公告',
             download: '下載',
@@ -170,6 +187,7 @@
         sectionLabels: {
             hero: '首屏視覺展示',
             features: '遊戲特色',
+            characters: '登場角色',
             media: '視覺畫廊',
             news: '最新公告',
             download: '取得遊戲'
@@ -187,14 +205,20 @@
             scrollAria: '向下滾動查看內容'
         },
         features: {
-            heading: '指尖之上的 4K 舞台',
-            lead: '歡迎來到夢羽的節奏世界<br>為你重構的 4 軌下落式音遊。在這裡，你不僅是玩家，更是創作者。',
+            heading: '律動，躍於指尖',
+            lead: '為你重構的 4 軌下落式音遊。在這裡，你不僅是玩家，更是創作者。',
             items: [
                 { icon: 'music', title: '專注 4K 模式', text: '經典 4 軌下落式玩法，與節奏共舞；難度可選，新手到高手都能循序提升。' },
                 { icon: 'diamond', title: '霧面玻璃音符設計', text: '半透明層次與清晰判定，讓節奏更易讀；每次敲擊，全然沉浸。' },
                 { icon: 'editing', title: '強大的譜面編輯器', text: '直觀編輯、即刻預覽、一鍵發佈；為你的歌曲定制專屬譜面並分享全球。' },
                 { icon: 'share', title: '社群與雲端', text: '相容主流社群音遊譜面格式，輕鬆匯入曲庫；全新計分系統與 Steam 雲存檔，同步你的每次進步。' }
             ]
+        },
+        characters: {
+            heading: '角色',
+            lead: '歡迎來到夢羽的節奏世界',
+            badge: '立繪',
+            thumbAria: '檢視角色立繪'
         },
         media: {
             heading: '媒體',
@@ -231,6 +255,7 @@
         },
         nav: {
             features: 'ゲーム特徴',
+            characters: 'キャラクター',
             media: 'ギャラリー',
             news: 'お知らせ',
             download: 'ダウンロード',
@@ -244,6 +269,7 @@
         sectionLabels: {
             hero: 'ヒーロービジュアル',
             features: 'ゲーム特徴',
+            characters: 'キャラクター紹介',
             media: 'ビジュアルギャラリー',
             news: '最新情報',
             download: 'ゲームを入手'
@@ -269,6 +295,12 @@
                 { icon: 'editing', title: '強力な譜面エディター', text: '直感的な編集、即時プレビュー、ワンクリック公開。楽曲に合わせたオリジナル譜面を作り、世界にシェアしよう。' },
                 { icon: 'share', title: 'コミュニティ&クラウド', text: '主要なコミュニティ音遊フォーマットに対応し、既存の譜面ライブラリも簡単取り込み。新スコアリングシステムとSteamクラウドで、進捗を常に同期。' }
             ]
+        },
+        characters: {
+            heading: 'キャラクター',
+            lead: '登場キャラクターと公式ビジュアル。',
+            badge: 'ビジュアル',
+            thumbAria: 'キャラクタービジュアルを表示'
         },
         media: {
             heading: 'メディア',
@@ -305,6 +337,7 @@
         },
         nav: {
             features: '게임 특징',
+            characters: '캐릭터',
             media: '갤러리',
             news: '공지',
             download: '다운로드',
@@ -318,6 +351,7 @@
         sectionLabels: {
             hero: '히어로 비주얼',
             features: '게임 특징',
+            characters: '캐릭터 소개',
             media: '비주얼 갤러리',
             news: '공지 사항',
             download: '게임 구매'
@@ -343,6 +377,12 @@
                 { icon: 'editing', title: '강력한 비트맵 에디터', text: '직관적인 편집, 즉시 미리보기, 원클릭 업로드. 당신의 곡에 맞는 전용 비트맵을 만들고 전 세계와 공유하세요.' },
                 { icon: 'share', title: '커뮤니티 & 클라우드', text: '주류 커뮤니티 리듬게임 포맷과 호환되어 기존 곡 라이브러리도 손쉽게 가져올 수 있습니다. 새로운 스코어링 시스템과 Steam 클라우드로 모든 진행 상황을 동기화합니다.' }
             ]
+        },
+        characters: {
+            heading: '캐릭터',
+            lead: '등장 캐릭터와 공식 일러스트.',
+            badge: '일러스트',
+            thumbAria: '캐릭터 일러스트 보기'
         },
         media: {
             heading: '미디어',
@@ -372,6 +412,7 @@
         },
         nav: {
             features: 'Fonctionnalités',
+            characters: 'Personnages',
             media: 'Médias',
             news: 'Actualités',
             cta: 'Télécharger'
@@ -384,6 +425,7 @@
         sectionLabels: {
             hero: 'Visuels de la vitrine',
             features: 'Fonctionnalités du jeu',
+            characters: 'Personnages du jeu',
             media: 'Médias officiels',
             news: 'Annonces'
         },
@@ -408,6 +450,12 @@
                 { icon: 'editing', title: 'Éditeur de charts puissant', text: 'Édition intuitive, aperçu instantané et publication en un clic. Créez des charts pour vos morceaux et partagez-les avec les joueurs du monde entier.' },
                 { icon: 'share', title: 'Communauté & Cloud', text: 'Importez facilement les principaux formats de charts communautaires, tandis que le nouveau système de score et Steam Cloud synchronisent chaque progrès.' }
             ]
+        },
+        characters: {
+            heading: 'Personnages',
+            lead: 'Les personnages de Live Rise!! et leurs illustrations officielles.',
+            badge: 'Illustration',
+            thumbAria: 'Voir l’illustration du personnage'
         },
         media: {
             heading: 'Médias',
@@ -437,6 +485,7 @@
         },
         nav: {
             features: 'Funzionalità',
+            characters: 'Personaggi',
             media: 'Media',
             news: 'Notizie',
             cta: 'Scarica'
@@ -449,6 +498,7 @@
         sectionLabels: {
             hero: 'Visuali in evidenza',
             features: 'Funzionalità di gioco',
+            characters: 'Personaggi di gioco',
             media: 'Media ufficiali',
             news: 'Ultime notizie'
         },
@@ -473,6 +523,12 @@
                 { icon: 'editing', title: 'Potente editor di chart', text: 'Editing intuitivo, anteprima immediata e pubblicazione con un clic. Crea chart per i tuoi brani e condividili con i giocatori di tutto il mondo.' },
                 { icon: 'share', title: 'Community e Cloud', text: 'Importa con facilità i principali formati di chart della community, mentre il nuovo sistema di punteggio e Steam Cloud tengono sincronizzati ogni progresso.' }
             ]
+        },
+        characters: {
+            heading: 'Personaggi',
+            lead: 'I personaggi di Live Rise!! e le loro illustrazioni ufficiali.',
+            badge: 'Illustrazione',
+            thumbAria: 'Visualizza l’illustrazione del personaggio'
         },
         media: {
             heading: 'Media',
@@ -502,6 +558,7 @@
         },
         nav: {
             features: 'Features',
+            characters: 'Charaktere',
             media: 'Medien',
             news: 'Neuigkeiten',
             cta: 'Herunterladen'
@@ -514,6 +571,7 @@
         sectionLabels: {
             hero: 'Visuelle Präsentation',
             features: 'Spiel-Features',
+            characters: 'Spielcharaktere',
             media: 'Offizielle Medien',
             news: 'Ankündigungen'
         },
@@ -538,6 +596,12 @@
                 { icon: 'editing', title: 'Leistungsstarker Chart-Editor', text: 'Intuitive Bearbeitung, Sofort-Vorschau und Veröffentlichung mit einem Klick. Erstelle Charts für deine Songs und teile sie mit Spielern weltweit.' },
                 { icon: 'share', title: 'Community & Cloud', text: 'Importiere gängige Community-Chartformate mühelos, während das neue Wertungssystem und Steam Cloud jeden Fortschritt synchronisieren.' }
             ]
+        },
+        characters: {
+            heading: 'Charaktere',
+            lead: 'Die Charaktere von Live Rise!! und ihre offiziellen Illustrationen.',
+            badge: 'Illustration',
+            thumbAria: 'Illustration ansehen'
         },
         media: {
             heading: 'Medien',
@@ -567,6 +631,7 @@
         },
         nav: {
             features: 'Características',
+            characters: 'Personajes',
             media: 'Multimedia',
             news: 'Noticias',
             cta: 'Descargar'
@@ -579,6 +644,7 @@
         sectionLabels: {
             hero: 'Visuales de portada',
             features: 'Características del juego',
+            characters: 'Personajes del juego',
             media: 'Multimedia oficial',
             news: 'Anuncios'
         },
@@ -603,6 +669,12 @@
                 { icon: 'editing', title: 'Potente editor de charts', text: 'Edición intuitiva, vista previa instantánea y publicación con un clic. Crea charts para tus canciones y compártelos con jugadores de todo el mundo.' },
                 { icon: 'share', title: 'Comunidad y nube', text: 'Importa con facilidad los principales formatos de charts de la comunidad, mientras el nuevo sistema de puntuación y Steam Cloud sincronizan cada progreso.' }
             ]
+        },
+        characters: {
+            heading: 'Personajes',
+            lead: 'Los personajes de Live Rise!! y sus ilustraciones oficiales.',
+            badge: 'Ilustración',
+            thumbAria: 'Ver ilustración del personaje'
         },
         media: {
             heading: 'Multimedia',
@@ -632,6 +704,7 @@
         },
         nav: {
             features: 'Funktioner',
+            characters: 'Karakterer',
             media: 'Medier',
             news: 'Nyheder',
             cta: 'Download'
@@ -644,6 +717,7 @@
         sectionLabels: {
             hero: 'Hero-visualer',
             features: 'Spillets funktioner',
+            characters: 'Spillets karakterer',
             media: 'Officielle medier',
             news: 'Seneste nyheder'
         },
@@ -668,6 +742,12 @@
                 { icon: 'editing', title: 'Kraftfuld chart-editor', text: 'Intuitiv redigering, øjeblikkelig forhåndsvisning og udgivelse med ét klik. Skræddersy charts til dine sange og del dem med spillere globalt.' },
                 { icon: 'share', title: 'Community & Cloud', text: 'Importér nemt de mest udbredte community-chartformater, mens det helt nye pointsystem og Steam Cloud holder hver fremgang synkroniseret.' }
             ]
+        },
+        characters: {
+            heading: 'Karakterer',
+            lead: 'Karaktererne i Live Rise!! og deres officielle illustrationer.',
+            badge: 'Illustration',
+            thumbAria: 'Se karakterillustration'
         },
         media: {
             heading: 'Medier',
@@ -697,6 +777,7 @@
         },
         nav: {
             features: 'Особенности',
+            characters: 'Персонажи',
             media: 'Медиа',
             news: 'Новости',
             cta: 'Скачать'
@@ -709,6 +790,7 @@
         sectionLabels: {
             hero: 'Визуальные материалы',
             features: 'Особенности игры',
+            characters: 'Персонажи игры',
             media: 'Официальные медиа',
             news: 'Объявления'
         },
@@ -733,6 +815,12 @@
                 { icon: 'editing', title: 'Мощный редактор карт', text: 'Интуитивное редактирование, мгновенный предпросмотр и публикация в один клик. Создавай собственные карты для своих песен и делись ими со всем миром.' },
                 { icon: 'share', title: 'Сообщество и облако', text: 'Легко импортируй популярные форматы карт от сообщества, а совершенно новая система подсчёта очков и Steam Cloud синхронизируют каждый твой шаг вперёд.' }
             ]
+        },
+        characters: {
+            heading: 'Персонажи',
+            lead: 'Персонажи Live Rise!! и их официальные иллюстрации.',
+            badge: 'Иллюстрация',
+            thumbAria: 'Посмотреть иллюстрацию персонажа'
         },
         media: {
             heading: 'Медиа',
@@ -762,6 +850,7 @@
         },
         nav: {
             features: 'Özellikler',
+            characters: 'Karakterler',
             media: 'Medya',
             news: 'Duyurular',
             cta: 'İndir'
@@ -774,6 +863,7 @@
         sectionLabels: {
             hero: 'Tanıtım görselleri',
             features: 'Oyun özellikleri',
+            characters: 'Oyun karakterleri',
             media: 'Resmi medya',
             news: 'Duyurular'
         },
@@ -798,6 +888,12 @@
                 { icon: 'editing', title: 'Güçlü chart düzenleyici', text: 'Sezgisel düzenleme, anlık önizleme ve tek tıkla yayımlama. Şarkıların için özel chart’lar oluştur ve dünya genelinde paylaş.' },
                 { icon: 'share', title: 'Topluluk ve Bulut', text: 'Başlıca topluluk chart formatlarını kolayca içe aktar; yepyeni puanlama sistemi ve Steam Cloud her gelişimini senkronize eder.' }
             ]
+        },
+        characters: {
+            heading: 'Karakterler',
+            lead: 'Live Rise!! karakterleri ve resmî illüstrasyonları.',
+            badge: 'İllüstrasyon',
+            thumbAria: 'Karakter illüstrasyonunu görüntüle'
         },
         media: {
             heading: 'Medya',
@@ -827,6 +923,7 @@
         },
         nav: {
             features: 'Funksjoner',
+            characters: 'Karakterer',
             media: 'Medier',
             news: 'Nyheter',
             cta: 'Last ned'
@@ -839,6 +936,7 @@
         sectionLabels: {
             hero: 'Hero-visualer',
             features: 'Spillfunksjoner',
+            characters: 'Spillets karakterer',
             media: 'Offisielle medier',
             news: 'Kunngjøringer'
         },
@@ -863,6 +961,12 @@
                 { icon: 'editing', title: 'Kraftig chart-editor', text: 'Intuitiv redigering, umiddelbar forhåndsvisning og publisering med ett klikk. Skreddersy charts til sangene dine og del dem med spillere globalt.' },
                 { icon: 'share', title: 'Community & Cloud', text: 'Importer de viktigste community-chartformatene enkelt, mens det helt nye poengsystemet og Steam Cloud holder hver fremgang synkronisert.' }
             ]
+        },
+        characters: {
+            heading: 'Karakterer',
+            lead: 'Karakterene i Live Rise!! og deres offisielle illustrasjoner.',
+            badge: 'Illustrasjon',
+            thumbAria: 'Se karakterillustrasjon'
         },
         media: {
             heading: 'Medier',
@@ -892,6 +996,7 @@
         },
         nav: {
             features: 'Funkcje',
+            characters: 'Postacie',
             media: 'Media',
             news: 'Aktualności',
             cta: 'Pobierz'
@@ -904,6 +1009,7 @@
         sectionLabels: {
             hero: 'Wizualne materiały',
             features: 'Funkcje gry',
+            characters: 'Postacie z gry',
             media: 'Oficjalne media',
             news: 'Ogłoszenia'
         },
@@ -928,6 +1034,12 @@
                 { icon: 'editing', title: 'Potężny edytor chartów', text: 'Intuicyjna edycja, podgląd na żywo i publikacja jednym kliknięciem. Twórz charty do swoich utworów i udostępniaj je graczom na całym świecie.' },
                 { icon: 'share', title: 'Społeczność i chmura', text: 'Łatwo importuj główne społecznościowe formaty chartów, a nowy system punktacji i Steam Cloud zsynchronizują każdy twój postęp.' }
             ]
+        },
+        characters: {
+            heading: 'Postacie',
+            lead: 'Postacie z Live Rise!! i ich oficjalne ilustracje.',
+            badge: 'Ilustracja',
+            thumbAria: 'Zobacz ilustrację postaci'
         },
         media: {
             heading: 'Media',
@@ -957,6 +1069,7 @@
         },
         nav: {
             features: 'ฟีเจอร์',
+            characters: 'ตัวละคร',
             media: 'สื่อ',
             news: 'ข่าวสาร',
             cta: 'ดาวน์โหลด'
@@ -969,6 +1082,7 @@
         sectionLabels: {
             hero: 'ภาพประกอบหน้าแรก',
             features: 'ฟีเจอร์ของเกม',
+            characters: 'ตัวละครในเกม',
             media: 'สื่อทางการ',
             news: 'ประกาศ'
         },
@@ -993,6 +1107,12 @@
                 { icon: 'editing', title: 'เครื่องมือแก้ไขชาร์ตทรงพลัง', text: 'แก้ไขอย่างเป็นธรรมชาติ พรีวิวทันที เผยแพร่ได้ในคลิกเดียว สร้างชาร์ตสำหรับเพลงของคุณและแชร์ให้ผู้เล่นทั่วโลก' },
                 { icon: 'share', title: 'คอมมูนิตีและคลาวด์', text: 'นำเข้าฟอร์แมตชาร์ตยอดนิยมของคอมมูนิตีได้ง่าย ๆ พร้อมระบบให้คะแนนใหม่และ Steam Cloud ที่ซิงก์ทุกความคืบหน้าของคุณ' }
             ]
+        },
+        characters: {
+            heading: 'ตัวละคร',
+            lead: 'ตัวละครจาก Live Rise!! และภาพลิขสิทธิ์แท้',
+            badge: 'ภาพประกอบ',
+            thumbAria: 'ดูภาพประกอบตัวละคร'
         },
         media: {
             heading: 'สื่อ',
@@ -1022,6 +1142,7 @@
         },
         nav: {
             features: 'Funktioner',
+            characters: 'Karaktärer',
             media: 'Media',
             news: 'Nyheter',
             cta: 'Hämta'
@@ -1034,6 +1155,7 @@
         sectionLabels: {
             hero: 'Hero-visualer',
             features: 'Spelfunktioner',
+            characters: 'Spelkaraktärer',
             media: 'Officiella medier',
             news: 'Meddelanden'
         },
@@ -1058,6 +1180,12 @@
                 { icon: 'editing', title: 'Kraftfull chart-editor', text: 'Intuitiv redigering, direkt förhandsvisning och publicering med ett klick. Skräddarsy charts till dina låtar och dela dem med spelare globalt.' },
                 { icon: 'share', title: 'Community & Cloud', text: 'Importera de största community-chartformaten enkelt, medan det helt nya poängsystemet och Steam Cloud håller varje framsteg synkroniserat.' }
             ]
+        },
+        characters: {
+            heading: 'Karaktärer',
+            lead: 'Karaktärerna i Live Rise!! och deras officiella illustrationer.',
+            badge: 'Illustration',
+            thumbAria: 'Visa karaktärsillustration'
         },
         media: {
             heading: 'Media',
@@ -1087,6 +1215,7 @@
         },
         nav: {
             features: 'Ominaisuudet',
+            characters: 'Hahmot',
             media: 'Media',
             news: 'Uutiset',
             cta: 'Lataa'
@@ -1099,6 +1228,7 @@
         sectionLabels: {
             hero: 'Aloitusvisualit',
             features: 'Pelin ominaisuudet',
+            characters: 'Pelin hahmot',
             media: 'Virallinen media',
             news: 'Tiedotteet'
         },
@@ -1123,6 +1253,12 @@
                 { icon: 'editing', title: 'Tehokas karttaeditori', text: 'Intuitiivinen muokkaus, välitön esikatselu ja julkaisu yhdellä klikkauksella. Räätälöi kartat kappaleillesi ja jaa ne pelaajien kanssa maailmanlaajuisesti.' },
                 { icon: 'share', title: 'Yhteisö ja pilvi', text: 'Tuo tärkeimmät yhteisön nuottikarttaformaatit helposti, kun uusi pisteytysjärjestelmä ja Steam Cloud pitävät jokaisen edistymisesi synkronoituna.' }
             ]
+        },
+        characters: {
+            heading: 'Hahmot',
+            lead: 'Live Rise!!:n hahmot ja niiden viralliset kuvitukset.',
+            badge: 'Kuvitus',
+            thumbAria: 'Näytä hahmokuvitus'
         },
         media: {
             heading: 'Media',
@@ -1152,6 +1288,7 @@
         },
         nav: {
             features: 'Features',
+            characters: 'Personages',
             media: 'Media',
             news: 'Nieuws',
             cta: 'Downloaden'
@@ -1164,6 +1301,7 @@
         sectionLabels: {
             hero: 'Hero-visuals',
             features: 'Spelfeatures',
+            characters: 'Spelpersonages',
             media: 'Officiële media',
             news: 'Aankondigingen'
         },
@@ -1188,6 +1326,12 @@
                 { icon: 'editing', title: 'Krachtige charteditor', text: 'Intuïtief bewerken, direct voorbeeld en publiceren met één klik. Maak charts voor je tracks en deel ze met spelers wereldwijd.' },
                 { icon: 'share', title: 'Community & Cloud', text: 'Importeer de belangrijkste community-chartformaten moeiteloos, terwijl het gloednieuwe scoresysteem en Steam Cloud elke voortgang synchroniseren.' }
             ]
+        },
+        characters: {
+            heading: 'Personages',
+            lead: 'De personages van Live Rise!! en hun officiële illustraties.',
+            badge: 'Illustratie',
+            thumbAria: 'Personage-illustratie bekijken'
         },
         media: {
             heading: 'Media',
@@ -1217,6 +1361,7 @@
         },
         nav: {
             features: 'Recursos',
+            characters: 'Personagens',
             media: 'Mídia',
             news: 'Notícias',
             cta: 'Baixar'
@@ -1229,6 +1374,7 @@
         sectionLabels: {
             hero: 'Visuais da vitrine',
             features: 'Recursos do jogo',
+            characters: 'Personagens do jogo',
             media: 'Mídia oficial',
             news: 'Anúncios'
         },
@@ -1253,6 +1399,12 @@
                 { icon: 'editing', title: 'Editor de charts poderoso', text: 'Edição intuitiva, pré-visualização instantânea e publicação em um clique. Personalize charts para suas músicas e compartilhe com jogadores do mundo todo.' },
                 { icon: 'share', title: 'Comunidade e nuvem', text: 'Importe com facilidade os principais formatos de charts da comunidade, enquanto o novo sistema de pontuação e o Steam Cloud mantêm cada progresso sincronizado.' }
             ]
+        },
+        characters: {
+            heading: 'Personagens',
+            lead: 'Os personagens de Live Rise!! e suas ilustrações oficiais.',
+            badge: 'Ilustração',
+            thumbAria: 'Ver ilustração do personagem'
         },
         media: {
             heading: 'Mídia',
@@ -1282,6 +1434,7 @@
         },
         nav: {
             features: 'Funcionalidades',
+            characters: 'Personagens',
             media: 'Multimédia',
             news: 'Notícias',
             cta: 'Descarregar'
@@ -1294,6 +1447,7 @@
         sectionLabels: {
             hero: 'Visuais de apresentação',
             features: 'Funcionalidades do jogo',
+            characters: 'Personagens do jogo',
             media: 'Multimédia oficial',
             news: 'Anúncios'
         },
@@ -1318,6 +1472,12 @@
                 { icon: 'editing', title: 'Editor de charts potente', text: 'Edição intuitiva, pré-visualização imediata e publicação com um clique. Personaliza charts para as tuas músicas e partilha-as com jogadores de todo o mundo.' },
                 { icon: 'share', title: 'Comunidade e nuvem', text: 'Importa sem esforço os principais formatos de charts da comunidade, enquanto o novo sistema de pontuação e o Steam Cloud sincronizam cada progresso.' }
             ]
+        },
+        characters: {
+            heading: 'Personagens',
+            lead: 'As personagens de Live Rise!! e as suas ilustrações oficiais.',
+            badge: 'Ilustração',
+            thumbAria: 'Ver ilustração da personagem'
         },
         media: {
             heading: 'Multimédia',
@@ -1347,6 +1507,7 @@
         },
         nav: {
             features: 'Características',
+            characters: 'Personajes',
             media: 'Multimedia',
             news: 'Noticias',
             cta: 'Descargar'
@@ -1359,6 +1520,7 @@
         sectionLabels: {
             hero: 'Visuales de portada',
             features: 'Características del juego',
+            characters: 'Personajes del juego',
             media: 'Multimedia oficial',
             news: 'Anuncios'
         },
@@ -1383,6 +1545,12 @@
                 { icon: 'editing', title: 'Potente editor de charts', text: 'Edición intuitiva, vista previa al instante y publicación con un clic. Personaliza charts para tus canciones y compártelos con jugadores de todo el mundo.' },
                 { icon: 'share', title: 'Comunidad y nube', text: 'Importa con facilidad los principales formatos de charts de la comunidad, mientras el nuevo sistema de puntuación y Steam Cloud sincronizan cada avance.' }
             ]
+        },
+        characters: {
+            heading: 'Personajes',
+            lead: 'Los personajes de Live Rise!! y sus ilustraciones oficiales.',
+            badge: 'Ilustración',
+            thumbAria: 'Ver ilustración del personaje'
         },
         media: {
             heading: 'Multimedia',
@@ -1412,6 +1580,7 @@
         },
         nav: {
             features: 'Особливості',
+            characters: 'Персонажі',
             media: 'Медіа',
             news: 'Новини',
             cta: 'Завантажити'
@@ -1424,6 +1593,7 @@
         sectionLabels: {
             hero: 'Візуальні матеріали',
             features: 'Особливості гри',
+            characters: 'Персонажі гри',
             media: 'Офіційні медіа',
             news: 'Оголошення'
         },
@@ -1448,6 +1618,12 @@
                 { icon: 'editing', title: 'Потужний редактор карт', text: 'Інтуїтивне редагування, миттєвий перегляд і публікація в один клік. Створюй власні карти для своїх пісень і ділися ними з гравцями по всьому світу.' },
                 { icon: 'share', title: 'Спільнота та хмара', text: 'Легко імпортуй популярні формати карт від спільноти, а абсолютно нова система підрахунку балів і хмарні збереження Steam синхронізують кожен твій крок уперед.' }
             ]
+        },
+        characters: {
+            heading: 'Персонажі',
+            lead: 'Персонажі Live Rise!! та їхні офіційні ілюстрації.',
+            badge: 'Ілюстрація',
+            thumbAria: 'Переглянути ілюстрацію персонажа'
         },
         media: {
             heading: 'Медіа',
@@ -1477,6 +1653,7 @@
         },
         nav: {
             features: 'Функции',
+            characters: 'Персонажи',
             media: 'Медия',
             news: 'Новини',
             cta: 'Изтегли'
@@ -1489,6 +1666,7 @@
         sectionLabels: {
             hero: 'Визуални материали',
             features: 'Функции на играта',
+            characters: 'Персонажи в играта',
             media: 'Официални медии',
             news: 'Обявления'
         },
@@ -1513,6 +1691,12 @@
                 { icon: 'editing', title: 'Мощен редактор за чартове', text: 'Интуитивно редактиране, незабавен преглед и публикуване с едно кликване. Създай чартове за своите песни и ги сподели с играчи по целия свят.' },
                 { icon: 'share', title: 'Общност и облак', text: 'Лесно импортирай популярните формати чартове от общността, докато изцяло новата система за точкуване и Steam Cloud синхронизират всеки твой напредък.' }
             ]
+        },
+        characters: {
+            heading: 'Персонажи',
+            lead: 'Персонажите в Live Rise!! и техните официални илюстрации.',
+            badge: 'Илюстрация',
+            thumbAria: 'Виж илюстрацията на героя'
         },
         media: {
             heading: 'Медия',
@@ -1542,6 +1726,7 @@
         },
         nav: {
             features: 'Funkciók',
+            characters: 'Karakterek',
             media: 'Média',
             news: 'Hírek',
             cta: 'Letöltés'
@@ -1554,6 +1739,7 @@
         sectionLabels: {
             hero: 'Fő vizuálok',
             features: 'A játék funkciói',
+            characters: 'A játék karakterei',
             media: 'Hivatalos média',
             news: 'Bejelentések'
         },
@@ -1578,6 +1764,12 @@
                 { icon: 'editing', title: 'Erőteljes chartszerkesztő', text: 'Intuitív szerkesztés, azonnali előnézet és közzététel egy kattintással. Készíts egyedi chartokat dalaidhoz, és oszd meg őket a világ játékosaival.' },
                 { icon: 'share', title: 'Közösség és felhő', text: 'A közösség főbb chartformátumait könnyedén importálhatod, miközben a vadonatúj pontozási rendszer és a Steam Felhő minden fejlődésedet szinkronban tartja.' }
             ]
+        },
+        characters: {
+            heading: 'Karakterek',
+            lead: 'A Live Rise!! karakterei és hivatalos illusztrációik.',
+            badge: 'Illusztráció',
+            thumbAria: 'Karakterillusztráció megtekintése'
         },
         media: {
             heading: 'Média',
@@ -1607,6 +1799,7 @@
         },
         nav: {
             features: 'Fitur',
+            characters: 'Karakter',
             media: 'Media',
             news: 'Berita',
             cta: 'Unduh'
@@ -1619,6 +1812,7 @@
         sectionLabels: {
             hero: 'Visual pembuka',
             features: 'Fitur game',
+            characters: 'Karakter game',
             media: 'Media resmi',
             news: 'Pengumuman'
         },
@@ -1643,6 +1837,12 @@
                 { icon: 'editing', title: 'Editor Chart yang Andal', text: 'Pengeditan intuitif, pratinjau instan, dan publikasi sekali klik. Buat chart khusus untuk lagu-lagumu dan bagikan dengan pemain di seluruh dunia.' },
                 { icon: 'share', title: 'Komunitas & Cloud', text: 'Impor format chart komunitas yang umum dengan mudah, sementara sistem skor serba baru dan Steam Cloud menyinkronkan setiap kemajuanmu.' }
             ]
+        },
+        characters: {
+            heading: 'Karakter',
+            lead: 'Para karakter Live Rise!! dan ilustrasi resminya.',
+            badge: 'Ilustrasi',
+            thumbAria: 'Lihat ilustrasi karakter'
         },
         media: {
             heading: 'Media',
@@ -1672,6 +1872,7 @@
         },
         nav: {
             features: 'Χαρακτηριστικά',
+            characters: 'Χαρακτήρες',
             media: 'Μέσα',
             news: 'Νέα',
             cta: 'Λήψη'
@@ -1684,6 +1885,7 @@
         sectionLabels: {
             hero: 'Κύρια οπτικά στοιχεία',
             features: 'Χαρακτηριστικά παιχνιδιού',
+            characters: 'Χαρακτήρες του παιχνιδιού',
             media: 'Επίσημα μέσα',
             news: 'Ανακοινώσεις'
         },
@@ -1708,6 +1910,12 @@
                 { icon: 'editing', title: 'Ισχυρός επεξεργαστής chart', text: 'Διαισθητική επεξεργασία, άμεση προεπισκόπηση και δημοσίευση με ένα κλικ. Δημιούργησε προσαρμοσμένα charts για τα τραγούδια σου και μοιράσου τα παγκοσμίως.' },
                 { icon: 'share', title: 'Κοινότητα και Cloud', text: 'Εισήγαγε εύκολα τα δημοφιλή formats charts της κοινότητας, ενώ το ολοκαίνουργιο σύστημα βαθμολογίας και το Steam Cloud συγχρονίζουν κάθε πρόοδο.' }
             ]
+        },
+        characters: {
+            heading: 'Χαρακτήρες',
+            lead: 'Οι χαρακτήρες του Live Rise!! και οι επίσημες εικονογραφήσεις τους.',
+            badge: 'Εικονογράφηση',
+            thumbAria: 'Προβολή εικονογράφησης χαρακτήρα'
         },
         media: {
             heading: 'Μέσα',
@@ -1737,6 +1945,7 @@
         },
         nav: {
             features: 'Funkce',
+            characters: 'Postavy',
             media: 'Média',
             news: 'Novinky',
             cta: 'Stáhnout'
@@ -1749,6 +1958,7 @@
         sectionLabels: {
             hero: 'Úvodní vizuály',
             features: 'Funkce hry',
+            characters: 'Postavy hry',
             media: 'Oficiální média',
             news: 'Oznámení'
         },
@@ -1773,6 +1983,12 @@
                 { icon: 'editing', title: 'Výkonný editor map', text: 'Intuitivní úpravy, okamžitý náhled a publikování jedním kliknutím. Vytvářej vlastní mapy pro své skladby a sdílej je s hráči po celém světě.' },
                 { icon: 'share', title: 'Komunita a cloud', text: 'Běžné komunitní formáty map snadno importuješ, zatímco zcela nový bodovací systém a Steam Cloud synchronizují každý tvůj pokrok.' }
             ]
+        },
+        characters: {
+            heading: 'Postavy',
+            lead: 'Postavy ze hry Live Rise!! a jejich oficiální ilustrace.',
+            badge: 'Ilustrace',
+            thumbAria: 'Zobrazit ilustraci postavy'
         },
         media: {
             heading: 'Média',
@@ -1802,6 +2018,7 @@
         },
         nav: {
             features: 'Caracteristici',
+            characters: 'Personaje',
             media: 'Media',
             news: 'Știri',
             cta: 'Descarcă'
@@ -1814,6 +2031,7 @@
         sectionLabels: {
             hero: 'Vizuale principale',
             features: 'Caracteristicile jocului',
+            characters: 'Personajele jocului',
             media: 'Media oficială',
             news: 'Anunțuri'
         },
@@ -1838,6 +2056,12 @@
                 { icon: 'editing', title: 'Editor de chart-uri puternic', text: 'Editare intuitivă, previzualizare instantanee și publicare cu un singur clic. Creează chart-uri personalizate pentru melodiile tale și distribuie-le jucătorilor din întreaga lume.' },
                 { icon: 'share', title: 'Comunitate și cloud', text: 'Importă cu ușurință formatele populare de chart-uri ale comunității, în timp ce sistemul de scor complet nou și Steam Cloud îți sincronizează fiecare progres.' }
             ]
+        },
+        characters: {
+            heading: 'Personaje',
+            lead: 'Personajele din Live Rise!! și ilustrațiile lor oficiale.',
+            badge: 'Ilustrație',
+            thumbAria: 'Vezi ilustrația personajului'
         },
         media: {
             heading: 'Media',
@@ -1867,6 +2091,7 @@
         },
         nav: {
             features: 'Tính năng',
+            characters: 'Nhân vật',
             media: 'Media',
             news: 'Tin tức',
             cta: 'Tải xuống'
@@ -1879,6 +2104,7 @@
         sectionLabels: {
             hero: 'Hình ảnh mở đầu',
             features: 'Tính năng game',
+            characters: 'Nhân vật trong game',
             media: 'Media chính thức',
             news: 'Thông báo'
         },
@@ -1903,6 +2129,12 @@
                 { icon: 'editing', title: 'Trình chỉnh sửa chart mạnh mẽ', text: 'Chỉnh sửa trực quan, xem trước tức thì và xuất bản chỉ với một cú nhấp. Tạo chart riêng cho các bài hát của bạn và chia sẻ với người chơi toàn cầu.' },
                 { icon: 'share', title: 'Cộng đồng & Đám mây', text: 'Dễ dàng nhập các định dạng chart phổ biến của cộng đồng, trong khi hệ thống tính điểm hoàn toàn mới và Steam Cloud đồng bộ mọi bước tiến của bạn.' }
             ]
+        },
+        characters: {
+            heading: 'Nhân vật',
+            lead: 'Các nhân vật của Live Rise!! và minh họa chính thức.',
+            badge: 'Minh họa',
+            thumbAria: 'Xem minh họa nhân vật'
         },
         media: {
             heading: 'Media',
@@ -1932,6 +2164,7 @@
         },
         nav: {
             features: 'الميزات',
+            characters: 'الشخصيات',
             media: 'الوسائط',
             news: 'الأخبار',
             cta: 'تنزيل'
@@ -1944,6 +2177,7 @@
         sectionLabels: {
             hero: 'مرئيات الواجهة',
             features: 'ميزات اللعبة',
+            characters: 'شخصيات اللعبة',
             media: 'الوسائط الرسمية',
             news: 'الإعلانات'
         },
@@ -1968,6 +2202,12 @@
                 { icon: 'editing', title: 'محرر مخططات قوي', text: 'تحرير بديهي ومعاينة فورية ونشر بنقرة واحدة. صمّم مخططات لأغانيك وشاركها مع اللاعبين حول العالم.' },
                 { icon: 'share', title: 'المجتمع والسحابة', text: 'استورد صيغ المخططات المجتمعية الرئيسية بسهولة، بينما يحافظ نظام التسجيل الجديد وSteam Cloud على مزامنة كل تقدم تحققه.' }
             ]
+        },
+        characters: {
+            heading: 'الشخصيات',
+            lead: 'شخصيات Live Rise!! ورسوماتها الرسمية.',
+            badge: 'رسم توضيحي',
+            thumbAria: 'عرض الرسم التوضيحي للشخصية'
         },
         media: {
             heading: 'الوسائط',

@@ -1,5 +1,6 @@
 ﻿const navItems = [
     { key: 'features', id: 'features' },
+    { key: 'characters', id: 'characters' },
     { key: 'media', id: 'media' },
     { key: 'news', id: 'news' }
 ];
@@ -512,6 +513,57 @@ function ingestMedia(data) {
     rebuildMediaData();
 }
 
+/* Character art scraped from the store page description (data/characters-<lang>.json,
+   refreshed daily by the update-news workflow — the store API carries no CORS
+   headers, so the page can't fetch Steam directly). The baked card below is
+   the offline fallback. */
+let liveCharacters = null;
+const steamCharacterImages = [
+    'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/4142580/extras/11fa8531ba14c2231db38c4c6b77c385.avif?t=1790073030'
+];
+const getCharacterImages = () => (
+    liveCharacters && liveCharacters.images.length ? liveCharacters.images : steamCharacterImages
+);
+
+const charactersCache = {};
+const charactersRequests = {};
+
+/* Same contract as loadMediaData: per-language file with an en fallback,
+   one shared in-flight request per language, null when every source fails. */
+function loadCharactersData(lang) {
+    if (charactersCache[lang]) {
+        return Promise.resolve(charactersCache[lang]);
+    }
+    if (!charactersRequests[lang]) {
+        const files = lang === 'en' ? ['data/characters-en.json'] : [`data/characters-${lang}.json`, 'data/characters-en.json'];
+        charactersRequests[lang] = (async () => {
+            for (const file of files) {
+                try {
+                    const res = await fetch(file);
+                    if (!res.ok) {
+                        continue;
+                    }
+                    const data = await res.json();
+                    if (!Array.isArray(data.images) || !data.images.length) {
+                        continue;
+                    }
+                    charactersCache[lang] = data;
+                    return data;
+                } catch (error) {
+                    /* try the fallback file */
+                }
+            }
+            return null;
+        })();
+        charactersRequests[lang].then((result) => {
+            if (result === null) {
+                delete charactersRequests[lang]; /* allow a retry on the next render */
+            }
+        });
+    }
+    return charactersRequests[lang];
+}
+
 /* Resolve with the fetched data if it lands within the budget, else null */
 function withMediaBudget(promise, ms) {
     return new Promise((resolve) => {
@@ -525,19 +577,36 @@ function withMediaBudget(promise, ms) {
 
 const mediaWaitMs = 1500;
 
-/* The app renders exactly once against the live media whenever the fetch
-   lands in time; only a slow fetch renders the baked lists first and swaps
-   them in when it lands. */
+/* The app renders exactly once against the live media and character art
+   whenever both fetches land in time; only a slow fetch renders the baked
+   lists first and swaps them in when they land. */
 async function renderWithMedia(lang) {
-    const data = await withMediaBudget(loadMediaData(lang), mediaWaitMs);
-    if (data && liveMedia !== data) {
-        ingestMedia(data);
+    const [mediaData, charactersData] = await Promise.all([
+        withMediaBudget(loadMediaData(lang), mediaWaitMs),
+        withMediaBudget(loadCharactersData(lang), mediaWaitMs)
+    ]);
+    if (mediaData && liveMedia !== mediaData) {
+        ingestMedia(mediaData);
+    }
+    if (charactersData) {
+        liveCharacters = charactersData;
     }
     renderApp();
-    if (!data) {
-        loadMediaData(lang).then((late) => {
-            if (late && currentLanguage === lang && liveMedia !== late) {
-                ingestMedia(late);
+    if (!mediaData || !charactersData) {
+        Promise.all([loadMediaData(lang), loadCharactersData(lang)]).then(([lateMedia, lateCharacters]) => {
+            if (currentLanguage !== lang) {
+                return;
+            }
+            let changed = false;
+            if (lateMedia && liveMedia !== lateMedia) {
+                ingestMedia(lateMedia);
+                changed = true;
+            }
+            if (lateCharacters && liveCharacters !== lateCharacters) {
+                liveCharacters = lateCharacters;
+                changed = true;
+            }
+            if (changed) {
                 renderApp();
             }
         });
@@ -1203,6 +1272,20 @@ function renderApp() {
                     </div>
                 </section>
 
+                <section class="section section--characters" id="characters" aria-label="${text.sectionLabels.characters}">
+                    <div class="section-inner">
+                        ${buildSectionHeading(text.characters)}
+                        <div class="character-grid">
+                            ${getCharacterImages().map((src, i) => `
+                                <button type="button" class="character-card reveal" data-character-index="${i}" aria-label="${text.characters.thumbAria} ${i + 1}" style="--reveal-delay:${(i * 0.15).toFixed(2)}s">
+                                    <span class="media-badge">${text.characters.badge}</span>
+                                    <img src="${src}" alt="" loading="lazy" />
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                </section>
+
                 <section class="section section--media" id="media" aria-label="${text.sectionLabels.media}">
                     <div class="section-inner">
                         ${buildSectionHeading(text.media)}
@@ -1379,7 +1462,11 @@ function renderApp() {
     };
 
     /* Back-to-top surfaces once scrolling crosses the hero's bottom edge —
-       the point where the second screen takes over the viewport */
+       the point where the second screen takes over the viewport. The disc
+       is NOT position:fixed: the fixed layer is the one render path where
+       Chromium drops backdrop-filter entirely (frost never painted). It is
+       absolute inside .page and this handler walks it down the document via
+       --btt-follow-y so it tracks the viewport bottom like fixed would. */
     const backToTopBtn = root.querySelector('.back-to-top');
     const updateBackToTop = () => {
         if (!backToTopBtn) {
@@ -1387,6 +1474,12 @@ function renderApp() {
         }
         const heroHeight = heroSection ? heroSection.offsetHeight : window.innerHeight;
         backToTopBtn.classList.toggle('visible', window.scrollY >= heroHeight);
+        /* top is relative to the button's offsetParent (.page), which sits
+           below the body margin — subtract its document offset so the disc
+           lands exactly at viewportBottom - 38 - --btt-gap. */
+        const anchor = backToTopBtn.offsetParent;
+        const anchorDocTop = anchor ? anchor.getBoundingClientRect().top + window.scrollY : 0;
+        backToTopBtn.style.setProperty('--btt-follow-y', `${window.scrollY + window.innerHeight - anchorDocTop}px`);
     };
 
     /* Scrollspy: highlight the nav link matching the section in view; the
@@ -1724,6 +1817,17 @@ function renderApp() {
             if (src) {
                 const media = translations[currentLanguage].media;
                 openImageLightbox(src, `${media.visualLabel} ${String(index + 1).padStart(2, '0')}`);
+            }
+        });
+    });
+
+    root.querySelectorAll('.character-card').forEach((card) => {
+        card.addEventListener('click', () => {
+            const index = Number(card.getAttribute('data-character-index'));
+            const src = getCharacterImages()[index];
+            if (src) {
+                const characters = translations[currentLanguage].characters;
+                openImageLightbox(src, `${characters.badge} ${String(index + 1).padStart(2, '0')}`);
             }
         });
     });
