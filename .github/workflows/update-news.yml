@@ -12,13 +12,25 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Fetch Steam news RSS (per language)
         run: |
           python3 - << 'EOF'
-          import json, os, urllib.request, xml.etree.ElementTree as ET, re, html
+          import json, os, time, urllib.request, xml.etree.ElementTree as ET, re, html
           from email.utils import parsedate_to_datetime
+
+          def fetch(url, attempts=3):
+              last = None
+              for attempt in range(attempts):
+                  try:
+                      req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+                      with urllib.request.urlopen(req, timeout=30) as res:
+                          return res.read()
+                  except Exception as error:
+                      last = error
+                      time.sleep(2 * (attempt + 1))
+              raise last
 
           os.makedirs("data", exist_ok=True)
           langs = [("en", "english"), ("zh-CN", "schinese"), ("zh-TW", "tchinese"), ("ja", "japanese"), ("ko", "korean"),
@@ -27,11 +39,16 @@ jobs:
                    ("sv", "swedish"), ("fi", "finnish"), ("nl", "dutch"), ("pt-BR", "brazilian"), ("pt-PT", "portuguese"),
                    ("es-419", "latam"), ("uk", "ukrainian"), ("bg", "bulgarian"), ("hu", "hungarian"), ("id", "indonesian"),
                    ("el", "greek"), ("cs", "czech"), ("ro", "romanian"), ("vi", "vietnamese"), ("ar", "arabic")]
+          failed = []
           for code, steam_lang in langs:
-              url = f"https://store.steampowered.com/feeds/news/app/4142580/?l={steam_lang}"
-              req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-              with urllib.request.urlopen(req, timeout=30) as res:
-                  root = ET.fromstring(res.read().decode("utf-8"))
+              try:
+                  root = ET.fromstring(
+                      fetch(f"https://store.steampowered.com/feeds/news/app/4142580/?l={steam_lang}").decode("utf-8")
+                  )
+              except Exception as error:
+                  failed.append(code)
+                  print(f"::warning::news fetch failed for {code}: {error}")
+                  continue
               items = []
               for item in root.iter("item"):
                   enclosure = item.find("enclosure")
@@ -51,12 +68,28 @@ jobs:
               with open(f"data/news-{code}.json", "w", encoding="utf-8") as f:
                   json.dump(out, f, ensure_ascii=False, indent=2)
               print(f"data/news-{code}.json: {len(out['appnews']['newsitems'])} items")
+          if len(failed) == len(langs):
+              raise SystemExit("news fetch failed for every language")
+          if failed:
+              print(f"news: kept previous data for {len(failed)} failed languages: {', '.join(failed)}")
           EOF
 
       - name: Fetch Steam media (per language)
         run: |
           python3 - << 'EOF'
-          import json, os, urllib.request
+          import json, os, time, urllib.request
+
+          def fetch(url, attempts=3):
+              last = None
+              for attempt in range(attempts):
+                  try:
+                      req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+                      with urllib.request.urlopen(req, timeout=30) as res:
+                          return res.read()
+                  except Exception as error:
+                      last = error
+                      time.sleep(2 * (attempt + 1))
+              raise last
 
           os.makedirs("data", exist_ok=True)
           langs = [("en", "english"), ("zh-CN", "schinese"), ("zh-TW", "tchinese"), ("ja", "japanese"), ("ko", "korean"),
@@ -65,22 +98,39 @@ jobs:
                    ("sv", "swedish"), ("fi", "finnish"), ("nl", "dutch"), ("pt-BR", "brazilian"), ("pt-PT", "portuguese"),
                    ("es-419", "latam"), ("uk", "ukrainian"), ("bg", "bulgarian"), ("hu", "hungarian"), ("id", "indonesian"),
                    ("el", "greek"), ("cs", "czech"), ("ro", "romanian"), ("vi", "vietnamese"), ("ar", "arabic")]
+          failed = []
           for code, steam_lang in langs:
-              url = f"https://store.steampowered.com/api/appdetails?appids=4142580&l={steam_lang}"
-              req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-              with urllib.request.urlopen(req, timeout=30) as res:
-                  data = json.load(res)
-              d = data["4142580"].get("data", {})
+              try:
+                  data = json.loads(
+                      fetch(f"https://store.steampowered.com/api/appdetails?appids=4142580&l={steam_lang}")
+                  )
+                  # Steam keys the payload by the app's canonical appid, which no
+                  # longer matches the requested 4142580 — take whichever key comes
+                  # back and fail this language if the payload carries no content.
+                  payload = data.get("4142580") or next(iter(data.values()), None)
+                  d = (payload or {}).get("data") or {}
+                  movies = d.get("movies", [])
+                  shots = d.get("screenshots", [])
+                  if not movies and not shots:
+                      raise ValueError("appdetails payload carries no media")
+              except Exception as error:
+                  failed.append(code)
+                  print(f"::warning::media fetch failed for {code}: {error}")
+                  continue
               out = {
                   "videos": [
                       {"name": m.get("name", ""), "thumb": m.get("thumbnail", ""), "hls": m.get("hls_h264", "")}
-                      for m in d.get("movies", [])
+                      for m in movies
                   ],
-                  "screenshots": [s.get("path_full", "") for s in d.get("screenshots", [])],
+                  "screenshots": [s.get("path_full", "") for s in shots],
               }
               with open(f"data/media-{code}.json", "w", encoding="utf-8") as f:
                   json.dump(out, f, ensure_ascii=False, indent=2)
               print(f"data/media-{code}.json: {len(out['videos'])} videos, {len(out['screenshots'])} shots")
+          if len(failed) == len(langs):
+              raise SystemExit("media fetch failed for every language")
+          if failed:
+              print(f"media: kept previous data for {len(failed)} failed languages: {', '.join(failed)}")
           EOF
 
       - name: Commit if changed
