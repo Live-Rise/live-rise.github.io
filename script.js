@@ -468,41 +468,79 @@ async function setupNews(root, text) {
 }
 
 const mediaCache = {};
+const mediaRequests = {};
 
-function applyMedia(data) {
-    mediaCache[currentLanguage] = data;
-    const changed = JSON.stringify(data.videos) !== JSON.stringify(getVideos()) ||
-        JSON.stringify(data.screenshots) !== JSON.stringify(getScreenshots());
-    if (changed) {
-        liveMedia = data;
-        rebuildMediaData();
-        renderApp();
+/* Fetch the language's daily-refreshed media list once; repeated calls share
+   the in-flight request. Resolves null when every source fails so the page
+   can keep the baked lists. */
+function loadMediaData(lang) {
+    if (mediaCache[lang]) {
+        return Promise.resolve(mediaCache[lang]);
     }
+    if (!mediaRequests[lang]) {
+        const files = lang === 'en' ? ['data/media-en.json'] : [`data/media-${lang}.json`, 'data/media-en.json'];
+        mediaRequests[lang] = (async () => {
+            for (const file of files) {
+                try {
+                    const res = await fetch(file);
+                    if (!res.ok) {
+                        continue;
+                    }
+                    const data = await res.json();
+                    if (!Array.isArray(data.videos) || !Array.isArray(data.screenshots)) {
+                        continue;
+                    }
+                    mediaCache[lang] = data;
+                    return data;
+                } catch (error) {
+                    /* try the fallback file */
+                }
+            }
+            return null;
+        })();
+        mediaRequests[lang].then((result) => {
+            if (result === null) {
+                delete mediaRequests[lang]; /* allow a retry on the next render */
+            }
+        });
+    }
+    return mediaRequests[lang];
 }
 
-/* Pull the daily-refreshed media list; re-renders once only if it differs
-   from what the page was rendered with. */
-async function refreshMediaData() {
-    if (mediaCache[currentLanguage]) {
-        applyMedia(mediaCache[currentLanguage]);
-        return;
+function ingestMedia(data) {
+    liveMedia = data;
+    rebuildMediaData();
+}
+
+/* Resolve with the fetched data if it lands within the budget, else null */
+function withMediaBudget(promise, ms) {
+    return new Promise((resolve) => {
+        const timer = setTimeout(() => resolve(null), ms);
+        promise.then((value) => {
+            clearTimeout(timer);
+            resolve(value);
+        });
+    });
+}
+
+const mediaWaitMs = 1500;
+
+/* The app renders exactly once against the live media whenever the fetch
+   lands in time; only a slow fetch renders the baked lists first and swaps
+   them in when it lands. */
+async function renderWithMedia(lang) {
+    const data = await withMediaBudget(loadMediaData(lang), mediaWaitMs);
+    if (data && liveMedia !== data) {
+        ingestMedia(data);
     }
-    const files = currentLanguage === 'en' ? ['data/media-en.json'] : [`data/media-${currentLanguage}.json`, 'data/media-en.json'];
-    for (const file of files) {
-        try {
-            const res = await fetch(file);
-            if (!res.ok) {
-                continue;
+    renderApp();
+    if (!data) {
+        loadMediaData(lang).then((late) => {
+            if (late && currentLanguage === lang && liveMedia !== late) {
+                ingestMedia(late);
+                renderApp();
             }
-            const data = await res.json();
-            if (!Array.isArray(data.videos) || !Array.isArray(data.screenshots)) {
-                continue;
-            }
-            applyMedia(data);
-            return;
-        } catch (error) {
-            /* try the fallback file */
-        }
+        });
     }
 }
 
@@ -614,7 +652,7 @@ function setNavOpen(open) {
     document.body.classList.toggle('nav-locked', navOpen);
 }
 
-function setLanguage(lang) {
+async function setLanguage(lang) {
     if (!translations[lang]) {
         return;
     }
@@ -628,8 +666,7 @@ function setLanguage(lang) {
     }
 
     navOpen = false;
-    renderApp();
-    refreshMediaData();
+    await renderWithMedia(lang);
 }
 
 function stopHeroSlides() {
@@ -1722,8 +1759,7 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-renderApp();
-refreshMediaData();
+renderWithMedia(currentLanguage);
 
 if (window.location.hash) {
     history.replaceState(null, '', window.location.pathname + window.location.search);
