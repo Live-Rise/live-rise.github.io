@@ -3,6 +3,12 @@
     "appid": 4142580,
     "newsitems": [
       {
+        "title": "新曲｜",
+        "url": "https://store.steampowered.com/news/app/4142580/view/713415392836452993",
+        "date": 1792069592,
+        "image": "https://clan.akamai.steamstatic.com/images/45858295/d14186c4865cb58322fb9036d4840f8ede38f0e4.png"
+      },
+      {
         "title": "更新｜Live Rise!! v1.1",
         "url": "https://store.steampowered.com/news/app/4142580/view/715665925076944673",
         "date": 1791138031,
@@ -31,12 +37,6 @@
         "url": "https://store.steampowered.com/news/app/4142580/view/714533682400988073",
         "date": 1785223661,
         "image": "https://clan.akamai.steamstatic.com/images/45858295/e8a9d81b9bdb0168e3414c0a78c99a83262cf4f4.png"
-      },
-      {
-        "title": "前導｜FADES",
-        "url": "https://store.steampowered.com/news/app/4142580/view/680756051157452207",
-        "date": 1784537265,
-        "image": "https://clan.akamai.steamstatic.com/images/45858295/a1bf164a9c6cdea3fdfc919187feddae42584abe.png"
       }
     ]
   }
